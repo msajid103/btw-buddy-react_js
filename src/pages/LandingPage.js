@@ -10,7 +10,7 @@ import {
   CreditCard,
 } from "lucide-react";
 
-import vat from "../assets/vat.webp";
+import vat from "../assets/vat.png";
 
 const LandingPage = () => {
   const features = [
