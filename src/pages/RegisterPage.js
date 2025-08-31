@@ -5,7 +5,6 @@ import {
   EyeOff,
   Lock,
   Mail,
-  Building,
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
@@ -26,11 +25,9 @@ const RegisterPage = () => {
   const [companyName, setCompanyName] = useState("");
   const [kvkNumber, setKvkNumber] = useState("");
   const [legalForm, setLegalForm] = useState("");
-  const [reportingPeriod, setReportingPeriod] = useState("quarter");
 
   // Terms
   const [agreeTerms, setAgreeTerms] = useState(false);
-  const [agreeMarketing, setAgreeMarketing] = useState(false);
 
   const passwordStrength = () => {
     if (password.length < 6)
@@ -44,8 +41,7 @@ const RegisterPage = () => {
 
   const isStep1Valid =
     firstName && lastName && email && password && confirmPassword && password === confirmPassword;
-  const isStep2Valid = companyName && kvkNumber && legalForm;
-  const isStep3Valid = agreeTerms;
+
 
   const handleNextStep = () => {
     if (currentStep < 3) setCurrentStep(currentStep + 1);

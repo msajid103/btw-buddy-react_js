@@ -4,7 +4,6 @@ import {
   CheckCircle,
   Shield,
   Zap,
-  Users,
   ArrowRight,
   BarChart3,
   FileText,
