@@ -277,7 +277,7 @@ const RegisterPage = () => {
 
                 <button
                   type="submit"
-                  className="w-full btn-primary text-lg py-3"
+                  className="w-full btn-primary text-lg py-3 cursor-pointer"
                   disabled={!isStep1Valid}
                 >
                   Next Step

@@ -105,8 +105,8 @@ const LandingPage = () => {
           {/* Left side - text */}
           <div className="animate-fade-in">
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              VAT management
-              <span className="text-primary-600 block">done effortlessly</span>
+              VAT Management
+              <span className="text-primary-600 block">Done Effortlessly</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-xl leading-relaxed">
               Automate your VAT workflow with smart banking connections,
@@ -145,7 +145,7 @@ const LandingPage = () => {
               className="flex items-center justify-center p-4 bg-white/70 rounded-xl backdrop-blur-sm shadow-sm animate-slide-up hover:shadow-md transition-all"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <CheckCircle className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+              <CheckCircle className="h-5 w-5 text-orange-500 mr-2 flex-shrink-0" />
               <span className="text-sm font-medium text-gray-700">
                 {benefit}
               </span>
@@ -193,7 +193,7 @@ const LandingPage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-primary-600 to-purple-600">
+      <section className="py-20 bg-gradient-to-r from-orange-600 to-orange-400">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Ready to get started?

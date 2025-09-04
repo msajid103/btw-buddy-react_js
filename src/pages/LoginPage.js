@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Lock, Mail, Smartphone, Shield } from 'lucide-react';
 
 const LoginPage = () => {
@@ -10,6 +10,7 @@ const LoginPage = () => {
   const [show2FA, setShow2FA] = useState(false);
   const [twoFactorCode, setTwoFactorCode] = useState('');
 
+  const navigation = useNavigate();
   const handleLogin = (e) => {
     e.preventDefault();
     if (email && password) {
@@ -19,6 +20,7 @@ const LoginPage = () => {
 
   const handle2FASubmit = (e) => {
     e.preventDefault();
+    navigation('/dashboard');
     console.log('Login successful with 2FA');
     // Handle successful login
   };
@@ -100,14 +102,18 @@ const LoginPage = () => {
                   Forgot password?
                 </Link>
               </div>
-
+              
+             
               <button
                 type="submit"
-                className="w-full btn-primary text-lg py-3 shadow-md hover:shadow-lg"
+                className="w-full btn-primary text-lg py-3 cursor-pointer shadow-md hover:shadow-lg"
                 disabled={!email || !password}
+                onClick={handleLogin}
               >
                 Log In
+             
               </button>
+            
             </div>
           </form>
         ) : (
