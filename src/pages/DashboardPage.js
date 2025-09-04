@@ -11,7 +11,6 @@ import {
   Link2,
   Bell
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { SideBar } from '../components/dashboard/SideBar';
 
 const DashboardPage = () => {
