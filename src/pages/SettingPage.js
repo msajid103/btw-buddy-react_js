@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
     User,
     Building,
@@ -7,7 +7,7 @@ import {
     CreditCard,
     Lock,
     Save,
-    RefreshCw,
+    LogOut ,
     Download,
     Trash2,
     Smartphone,
@@ -19,14 +19,16 @@ import {
     X
 } from 'lucide-react';
 import { SideBar } from '../components/dashboard/SideBar';
+import { AuthContext } from '../context/AuthContext';
 
 const SettingPage = () => {
+    const { logout, user } = useContext(AuthContext)
     const [activeTab, setActiveTab] = useState('profile');
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [show2FAModal, setShow2FAModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [passwordVisible, setPasswordVisible] = useState(false);
-
+    console.log("User detail=",user)
     // User profile state
     const [userProfile, setUserProfile] = useState({
         firstName: 'John',
@@ -129,9 +131,11 @@ const SettingPage = () => {
         { id: 'data', label: 'Data & Privacy', icon: Database }
     ];
 
+    const handleLogout = () => {
+        logout();
+    };
     const handleSave = () => {
-        // Save settings logic
-        console.log('Saving settings...');
+        console.log("saved");
     };
 
     const handlePasswordChange = () => {
@@ -368,8 +372,8 @@ const SettingPage = () => {
                                     <button
                                         onClick={() => setShow2FAModal(true)}
                                         className={`px-3 py-1 text-sm rounded-lg ${securitySettings.twoFactorEnabled
-                                                ? 'bg-green-100 text-green-800'
-                                                : 'bg-primary-200 text-primary-600'
+                                            ? 'bg-green-100 text-green-800'
+                                            : 'bg-primary-200 text-primary-600'
                                             }`}
                                     >
                                         {securitySettings.twoFactorEnabled ? 'Enabled' : 'Disabled'}
@@ -550,7 +554,7 @@ const SettingPage = () => {
 
                             <div className="flex items-center justify-between p-4 bg-primary-50 rounded-lg">
                                 <div className="flex items-center space-x-3">
-                                    <RefreshCw className="h-5 w-5 text-primary-600" />
+                                    <LogOut  className="h-5 w-5 text-primary-600" />
                                     <div>
                                         <span className="font-medium text-primary-900">Backup Data</span>
                                         <p className="text-sm text-primary-500">Create a backup of your current data</p>
@@ -677,8 +681,8 @@ const SettingPage = () => {
                     <button
                         onClick={handle2FAChange}
                         className={`px-4 py-2 rounded-lg ${securitySettings.twoFactorEnabled
-                                ? 'bg-red-600 text-white hover:bg-red-700'
-                                : 'bg-primary-600 text-white hover:bg-primary-700'
+                            ? 'bg-red-600 text-white hover:bg-red-700'
+                            : 'bg-primary-600 text-white hover:bg-primary-700'
                             }`}
                     >
                         {securitySettings.twoFactorEnabled ? 'Disable' : 'Enable'}
@@ -739,9 +743,11 @@ const SettingPage = () => {
                             <p className="text-primary-600 mt-1">Doeksen Digital • Manage your account and preferences</p>
                         </div>
                         <div className="flex items-center space-x-4">
-                            <button className="flex items-center space-x-2 px-4 py-2 text-primary-700 hover:bg-primary-100 rounded-lg transition-colors">
-                                <RefreshCw className="h-4 w-4" />
-                                <span>Reset to defaults</span>
+                            <button
+                                onClick={handleLogout}
+                                className="flex items-center space-x-2 px-4 py-2 text-primary-700 hover:bg-primary-100 rounded-lg transition-colors">
+                                <LogOut  className="h-4 w-4" />
+                                <span>Logout</span>
                             </button>
                             <button
                                 onClick={handleSave}
@@ -803,8 +809,8 @@ const SettingPage = () => {
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${activeTab === tab.id
-                                            ? 'bg-primary-600 text-white'
-                                            : 'bg-white text-primary-700 hover:bg-primary-100'
+                                        ? 'bg-primary-600 text-white'
+                                        : 'bg-white text-primary-700 hover:bg-primary-100'
                                         }`}
                                 >
                                     <tab.icon className="h-5 w-5" />

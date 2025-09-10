@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Lock, Mail, Smartphone, Shield } from 'lucide-react';
+import React, { useContext, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Eye, EyeOff, Lock, Mail, Smartphone, Loader2, Shield } from 'lucide-react';
+import { AuthContext } from '../../context/AuthContext';
 
 const LoginPage = () => {
+  const { login, loading } = useContext(AuthContext)
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -10,24 +12,32 @@ const LoginPage = () => {
   const [show2FA, setShow2FA] = useState(false);
   const [twoFactorCode, setTwoFactorCode] = useState('');
 
-  const navigation = useNavigate();
-  const handleLogin = (e) => {
+  console.log('satateeawda', loading)
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (email && password) {
-      setShow2FA(true);
+    try {
+      if (email && password) {
+        await login(email, password)
+        window.location.href = "/";
+      }
+    } catch (error) {
+      alert("Login failed!");
     }
   };
 
-  const handle2FASubmit = (e) => {
-    e.preventDefault();
-    navigation('/dashboard');
-    console.log('Login successful with 2FA');
-    // Handle successful login
-  };
+
+
+
+  // const handle2FASubmit = (e) => {
+  //   e.preventDefault();
+  //   navigation('/dashboard');
+  //   console.log('Login successful with 2FA');
+  //   // Handle successful login
+  // };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-purple-100 flex items-center justify-center p-6">
-      <div className="w-full max-w-md">     
+      <div className="w-full max-w-md">
 
         {/* Logo & Heading */}
         <div className="text-center mb-10">
@@ -102,23 +112,31 @@ const LoginPage = () => {
                   Forgot password?
                 </Link>
               </div>
-              
-             
+
+
               <button
                 type="submit"
-                className="w-full btn-primary text-lg py-3 cursor-pointer shadow-md hover:shadow-lg"
-                disabled={!email || !password}
+                className="w-full btn-primary text-lg py-3 cursor-pointer shadow-md hover:shadow-lg 
+             flex items-center justify-center space-x-2"
+                disabled={!email || !password || loading}
                 onClick={handleLogin}
               >
-                Log In
-             
+                {loading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Loading...</span>
+                  </>
+                ) : (
+                  "Log In"
+                )}
               </button>
-            
+
             </div>
           </form>
         ) : (
           // 2FA Form
-          <form onSubmit={handle2FASubmit} className="card bg-white/90 backdrop-blur-xl border border-gray-200 animate-slide-up">
+          // <form onSubmit={handle2FASubmit} className="card bg-white/90 backdrop-blur-xl border border-gray-200 animate-slide-up">
+          <form className="card bg-white/90 backdrop-blur-xl border border-gray-200 animate-slide-up">
             <div className="text-center mb-6">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Smartphone className="h-8 w-8 text-green-600" />
