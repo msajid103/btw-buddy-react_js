@@ -15,7 +15,7 @@ import {
   Printer,
   X,
 } from 'lucide-react';
-import { SideBar } from '../components/dashboard/SideBar';
+import { SideBar } from '../components/common/SideBar';
 
 const VATReturnPage = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('Q3 2025');

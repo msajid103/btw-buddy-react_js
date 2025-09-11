@@ -11,7 +11,7 @@ import {
   Link2,
   Bell
 } from 'lucide-react';
-import { SideBar } from '../components/dashboard/SideBar';
+import { SideBar } from '../components/common/SideBar';
 
 const DashboardPage = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('Q4 2024');

@@ -11,23 +11,18 @@ import {
   MoreHorizontal,
   Eye,
   Edit,
+  Link2,
   Calendar,
   ArrowUpDown,
   Bell,
   Loader2,
   AlertCircle,
-  X,
-  Save,
-  DollarSign,
-  Building,
-  Tag,
-  Receipt,
-  Trash2
+
 } from 'lucide-react';
 import { SideBar } from '../components/common/SideBar';
 
 const TransactionsPage = () => {
-  
+  // State management
   const [transactions, setTransactions] = useState([]);
   const [selectedTransactions, setSelectedTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,24 +46,6 @@ const TransactionsPage = () => {
   // Modal states
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showViewModal, setShowViewModal] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] = useState(null);
-  const [formLoading, setFormLoading] = useState(false);
-
-  // Form state
-  const [formData, setFormData] = useState({
-    description: '',
-    amount: '',
-    transaction_type: 'expense',
-    date: new Date().toISOString().split('T')[0],
-    category: '',
-    account: '',
-    vat_rate: '21',
-    notes: '',
-    status: 'unlabeled'
-  });
 
   // Build filters object
   const buildFilters = () => {
@@ -85,7 +62,6 @@ const TransactionsPage = () => {
     setError(null);
     try {
       const filters = buildFilters();
-      console.log("Filter--",filters)
       const data = await transactionService.getTransactions(page, filters);
       
       setTransactions(data.results);
@@ -115,9 +91,8 @@ const TransactionsPage = () => {
 
   const fetchAccounts = async () => {
     try {
-      const data= await transactionService.getAccounts();
-      console.log("Accounts data ----",data.results )
-      setAccounts(data.results );
+      const data = await transactionService.getAccounts();
+      setAccounts(data);
     } catch (err) {
       console.error('Error fetching accounts:', err);
     }
@@ -126,9 +101,7 @@ const TransactionsPage = () => {
   const fetchCategories = async () => {
     try {
       const data = await transactionService.getCategories();
-      console.log("Categories data ----",data.results )
-
-      setCategories(data.results);
+      setCategories(data);
     } catch (err) {
       console.error('Error fetching categories:', err);
     }
@@ -152,97 +125,6 @@ const TransactionsPage = () => {
     return () => clearTimeout(timeoutId);
   }, [searchQuery, filterStatus, dateRange]);
 
-  // Form handlers
-  const resetForm = () => {
-    setFormData({
-      description: '',
-      amount: '',
-      transaction_type: 'expense',
-      date: new Date().toISOString().split('T')[0],
-      category: '',
-      account: '',
-      vat_rate: '21',
-      notes: '',
-      status: 'unlabeled'
-    });
-  };
-
-  const handleAddTransaction = () => {
-    resetForm();
-    setShowAddModal(true);
-  };
-
-  const handleEditTransaction = (transaction) => {
-    setSelectedTransaction(transaction);
-    setFormData({
-      description: transaction.description || '',
-      amount: transaction.amount || '',
-      transaction_type: transaction.transaction_type || 'expense',
-      date: transaction.date || new Date().toISOString().split('T')[0],
-      category: transaction.category || '',
-      account: transaction.account || '',
-      vat_rate: transaction.vat_rate || '21',
-      notes: transaction.notes || '',
-      status: transaction.status || 'unlabeled'
-    });
-    setShowEditModal(true);
-  };
-
-  const handleViewTransaction = async (transaction) => {
-    try {
-      setFormLoading(true);
-      const fullTransaction = await transactionService.getTransaction(transaction.id);
-      setSelectedTransaction(fullTransaction);
-      setShowViewModal(true);
-    } catch (err) {
-      console.error('Error fetching transaction details:', err);
-      alert('Error loading transaction details');
-    } finally {
-      setFormLoading(false);
-    }
-  };
-
-  const handleSubmitForm = async (e) => {
-    e.preventDefault();
-    setFormLoading(true);
-    
-    try {
-      if (showEditModal && selectedTransaction) {
-        await transactionService.updateTransaction(selectedTransaction.id, formData);
-        setShowEditModal(false);
-      } else {
-        await transactionService.createTransaction(formData);
-        setShowAddModal(false);
-      }
-      
-      // Refresh data
-      fetchTransactions(pagination.current_page);
-      fetchStats();
-      resetForm();
-      setSelectedTransaction(null);
-    } catch (err) {
-      console.error('Error saving transaction:', err);
-      alert('Error saving transaction: ' + err.message);
-    } finally {
-      setFormLoading(false);
-    }
-  };
-
-  const handleDeleteTransaction = async (transactionId) => {
-    if (!window.confirm('Are you sure you want to delete this transaction?')) {
-      return;
-    }
-
-    try {
-      await transactionService.deleteTransaction(transactionId);
-      fetchTransactions(pagination.current_page);
-      fetchStats();
-    } catch (err) {
-      console.error('Error deleting transaction:', err);
-      alert('Error deleting transaction: ' + err.message);
-    }
-  };
-
   // Event handlers
   const handleSelectAll = () => {
     if (selectedTransactions.length === transactions.length) {
@@ -265,8 +147,10 @@ const TransactionsPage = () => {
     try {
       const result = await transactionService.bulkAction(selectedTransactions, action, data);
       
+      // Show success message
       alert(result.message || 'Action completed successfully');
       
+      // Clear selection and refresh data
       setSelectedTransactions([]);
       fetchTransactions(pagination.current_page);
       fetchStats();
@@ -291,6 +175,7 @@ const TransactionsPage = () => {
       const result = await transactionService.importTransactionsCSV(file);
       alert(`Import completed: ${result.stats.successful_rows} successful, ${result.stats.failed_rows} failed`);
       
+      // Refresh data
       fetchTransactions();
       fetchStats();
     } catch (err) {
@@ -326,221 +211,6 @@ const TransactionsPage = () => {
     });
   };
 
-  // Modal Component
-  const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
-    if (!isOpen) return null;
-
-    const sizeClasses = {
-      sm: 'max-w-md',
-      md: 'max-w-lg',
-      lg: 'max-w-2xl',
-      xl: 'max-w-4xl'
-    };
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className={`bg-white rounded-lg shadow-xl ${sizeClasses[size]} w-full max-h-[90vh] overflow-auto`}>
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-            <button 
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-          <div className="p-6">
-            {children}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Transaction Form Component
-  const TransactionForm = ({ onSubmit, loading }) => (
-    <form onSubmit={onSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Description */}
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Description *
-          </label>
-          <input
-            type="text"
-            required
-            value={formData.description}
-            onChange={(e) => setFormData({...formData, description: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Enter transaction description"
-          />
-        </div>
-
-        {/* Amount */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Amount *
-          </label>
-          <div className="relative">
-            <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="number"
-              step="0.01"
-              required
-              value={formData.amount}
-              onChange={(e) => setFormData({...formData, amount: e.target.value})}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="0.00"
-            />
-          </div>
-        </div>
-
-        {/* Transaction Type */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Type *
-          </label>
-          <select
-            value={formData.transaction_type}
-            onChange={(e) => setFormData({...formData, transaction_type: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="expense">Expense</option>
-            <option value="income">Income</option>
-          </select>
-        </div>
-
-        {/* Date */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Date *
-          </label>
-          <input
-            type="date"
-            required
-            value={formData.date}
-            onChange={(e) => setFormData({...formData, date: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-
-        {/* Account */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Account
-          </label>
-          <div className="relative">
-            <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <select
-              value={formData.account}
-              onChange={(e) => setFormData({...formData, account: e.target.value})}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">Select Account</option>
-              {accounts.map(account => (
-                <option key={account.id} value={account.id}>
-                  {account.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Category */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Category
-          </label>
-          <div className="relative">
-            <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <select
-              value={formData.category}
-              onChange={(e) => setFormData({...formData, category: e.target.value})}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">Select Category</option>
-              {categories.map(category => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* VAT Rate */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            VAT Rate (%)
-          </label>
-          <select
-            value={formData.vat_rate}
-            onChange={(e) => setFormData({...formData, vat_rate: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="0">0%</option>
-            <option value="9">9%</option>
-            <option value="21">21%</option>
-          </select>
-        </div>
-
-        {/* Status */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Status
-          </label>
-          <select
-            value={formData.status}
-            onChange={(e) => setFormData({...formData, status: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="unlabeled">Unlabeled</option>
-            <option value="pending">Pending</option>
-            <option value="labeled">Labeled</option>
-          </select>
-        </div>
-
-        {/* Notes */}
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Notes
-          </label>
-          <textarea
-            value={formData.notes}
-            onChange={(e) => setFormData({...formData, notes: e.target.value})}
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Add any additional notes..."
-          />
-        </div>
-      </div>
-
-      {/* Form Actions */}
-      <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-        <button
-          type="button"
-          onClick={() => {
-            setShowAddModal(false);
-            setShowEditModal(false);
-            resetForm();
-          }}
-          className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
-        >
-          {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-          <Save className="h-4 w-4" />
-          <span>{showEditModal ? 'Update' : 'Create'} Transaction</span>
-        </button>
-      </div>
-    </form>
-  );
-
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -564,10 +234,13 @@ const TransactionsPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar would go here - keeping space for consistency */}
       <div className="w-64 bg-white border-r border-gray-200">
+        {/* Placeholder for sidebar */}
         <SideBar/>
       </div>
 
+      {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <header className="bg-white border-b border-gray-200 px-6 py-4">
@@ -594,10 +267,7 @@ const TransactionsPage = () => {
                   className="hidden"
                 />
               </label>
-              <button 
-                onClick={handleAddTransaction}
-                className="flex items-center space-x-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
-              >
+              <button className="flex items-center space-x-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors">
                 <Plus className="h-4 w-4" />
                 <span>Add Transaction</span>
               </button>
@@ -612,6 +282,7 @@ const TransactionsPage = () => {
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
             <div className="flex items-center space-x-4">
+              {/* Search */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
@@ -623,6 +294,7 @@ const TransactionsPage = () => {
                 />
               </div>
 
+              {/* Status Filter */}
               <div className="relative">
                 <select
                   value={filterStatus}
@@ -637,6 +309,7 @@ const TransactionsPage = () => {
                 <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               </div>
 
+              {/* Date Range */}
               <div className="relative">
                 <select
                   value={dateRange}
@@ -804,33 +477,21 @@ const TransactionsPage = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        €{parseFloat(transaction.vat_amount || 0).toFixed(2)}
+                        €{parseFloat(transaction.vat_amount).toFixed(2)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(transaction.status)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center space-x-2">
-                          <button 
-                            onClick={() => handleViewTransaction(transaction)}
-                            className="text-blue-600 hover:text-blue-800 transition-colors"
-                            title="View Details"
-                          >
+                          <button className="text-blue-600 hover:text-blue-800 transition-colors">
                             <Eye className="h-4 w-4" />
                           </button>
-                          <button 
-                            onClick={() => handleEditTransaction(transaction)}
-                            className="text-gray-600 hover:text-gray-800 transition-colors"
-                            title="Edit Transaction"
-                          >
+                          <button className="text-gray-600 hover:text-gray-800 transition-colors">
                             <Edit className="h-4 w-4" />
                           </button>
-                          <button 
-                            onClick={() => handleDeleteTransaction(transaction.id)}
-                            className="text-red-600 hover:text-red-800 transition-colors"
-                            title="Delete Transaction"
-                          >
-                            <Trash2 className="h-4 w-4" />
+                          <button className="text-gray-600 hover:text-gray-800 transition-colors">
+                            <Link2 className="h-4 w-4" />
                           </button>
                           <button className="text-gray-400 hover:text-gray-600 transition-colors">
                             <MoreHorizontal className="h-4 w-4" />
@@ -848,10 +509,7 @@ const TransactionsPage = () => {
                   <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No transactions found</h3>
                   <p className="text-gray-500 mb-6">Try adjusting your filters or import some transactions.</p>
-                  <button 
-                    onClick={handleAddTransaction}
-                    className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
-                  >
+                  <button className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
                     Add Transaction
                   </button>
                 </div>
@@ -926,149 +584,6 @@ const TransactionsPage = () => {
           </div>
         )}
       </div>
-
-      {/* Add Transaction Modal */}
-      <Modal
-        isOpen={showAddModal}
-        onClose={() => {
-          setShowAddModal(false);
-          resetForm();
-        }}
-        title="Add New Transaction"
-        size="lg"
-      >
-        <TransactionForm onSubmit={handleSubmitForm} loading={formLoading} />
-      </Modal>
-
-      {/* Edit Transaction Modal */}
-      <Modal
-        isOpen={showEditModal}
-        onClose={() => {
-          setShowEditModal(false);
-          resetForm();
-          setSelectedTransaction(null);
-        }}
-        title="Edit Transaction"
-        size="lg"
-      >
-        <TransactionForm onSubmit={handleSubmitForm} loading={formLoading} />
-      </Modal>
-
-      {/* View Transaction Modal */}
-      <Modal
-        isOpen={showViewModal}
-        onClose={() => {
-          setShowViewModal(false);
-          setSelectedTransaction(null);
-        }}
-        title="Transaction Details"
-        size="lg"
-      >
-        {selectedTransaction && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Basic Info */}
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Description</label>
-                  <p className="text-lg font-semibold text-gray-900">{selectedTransaction.description}</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Amount</label>
-                  <p className={`text-2xl font-bold ${selectedTransaction.transaction_type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
-                    {selectedTransaction.formatted_amount || `€${selectedTransaction.amount}`}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Date</label>
-                  <p className="text-gray-900 flex items-center">
-                    <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-                    {formatDate(selectedTransaction.date)}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Status</label>
-                  <div>{getStatusBadge(selectedTransaction.status)}</div>
-                </div>
-              </div>
-
-              {/* Additional Details */}
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Account</label>
-                  <p className="text-gray-900 flex items-center">
-                    <Building className="h-4 w-4 mr-2 text-gray-400" />
-                    {selectedTransaction.account_name || 'Not specified'}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Category</label>
-                  <p className="text-gray-900 flex items-center">
-                    <Tag className="h-4 w-4 mr-2 text-gray-400" />
-                    {selectedTransaction.category_name || 'Uncategorized'}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">VAT Amount</label>
-                  <p className="text-gray-900">€{parseFloat(selectedTransaction.vat_amount || 0).toFixed(2)}</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Type</label>
-                  <p className="text-gray-900 capitalize">{selectedTransaction.transaction_type}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Receipt Info */}
-            {selectedTransaction.has_receipt && (
-              <div className="border-t border-gray-200 pt-6">
-                <div className="flex items-center space-x-2 text-blue-600">
-                  <Receipt className="h-5 w-5" />
-                  <span className="font-medium">Receipt Available</span>
-                </div>
-              </div>
-            )}
-
-            {/* Notes */}
-            {selectedTransaction.notes && (
-              <div className="border-t border-gray-200 pt-6">
-                <label className="block text-sm font-medium text-gray-500 mb-2">Notes</label>
-                <p className="text-gray-900 bg-gray-50 p-4 rounded-lg">{selectedTransaction.notes}</p>
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-              <button
-                onClick={() => {
-                  setShowViewModal(false);
-                  handleEditTransaction(selectedTransaction);
-                }}
-                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center space-x-2"
-              >
-                <Edit className="h-4 w-4" />
-                <span>Edit Transaction</span>
-              </button>
-              <button
-                onClick={() => {
-                  setShowViewModal(false);
-                  handleDeleteTransaction(selectedTransaction.id);
-                }}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                <span>Delete</span>
-              </button>
-            </div>
-          </div>
-        )}
-      </Modal>
     </div>
   );
 };

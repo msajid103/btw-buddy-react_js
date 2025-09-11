@@ -5,8 +5,7 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/auth/LoginPage";
-import RegisterPage from "./pages/auth/RegisterPage1";
-// import RegisterPage from './pages/auth/RegisterPage2';
+import RegisterPage from "./pages/auth/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import TransactionsPage from "./pages/TransactionsPage";
 import ReceiptPage from "./pages/ReceiptPage";

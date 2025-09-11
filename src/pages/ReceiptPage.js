@@ -14,7 +14,7 @@ import {
   Clock,
   TrendingUp
 } from 'lucide-react';
-import { SideBar } from '../components/dashboard/SideBar';
+import { SideBar } from '../components/common/SideBar';
 
 const ReceiptPage = () => {
   const [receipts, setReceipts] = useState([

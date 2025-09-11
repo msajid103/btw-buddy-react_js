@@ -18,7 +18,7 @@ import {
     CheckCircle,
     X
 } from 'lucide-react';
-import { SideBar } from '../components/dashboard/SideBar';
+import { SideBar } from '../components/common/SideBar';
 import { AuthContext } from '../context/AuthContext';
 
 const SettingPage = () => {
