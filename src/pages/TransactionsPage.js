@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { transactionService } from '../services/transactionService';
-import { 
-  FileText, 
+import {
+  FileText,
   Search,
   Filter,
   Download,
@@ -11,23 +11,20 @@ import {
   MoreHorizontal,
   Eye,
   Edit,
+  Link2,
   Calendar,
   ArrowUpDown,
   Bell,
   Loader2,
   AlertCircle,
-  X,
-  Save,
-  DollarSign,
-  Building,
-  Tag,
-  Receipt,
   Trash2
 } from 'lucide-react';
 import { SideBar } from '../components/common/SideBar';
+import Modal from '../components/common/Modal';
+import TransactionForm from '../components/transactions/TransactionForm';
+import TransactionDetailView from '../components/transactions/TransactionDetailView';
 
 const TransactionsPage = () => {
-  
   const [transactions, setTransactions] = useState([]);
   const [selectedTransactions, setSelectedTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -85,9 +82,9 @@ const TransactionsPage = () => {
     setError(null);
     try {
       const filters = buildFilters();
-      console.log("Filter--",filters)
+      console.log("Filter--", filters)
       const data = await transactionService.getTransactions(page, filters);
-      
+
       setTransactions(data.results);
       setPagination({
         count: data.count,
@@ -115,9 +112,8 @@ const TransactionsPage = () => {
 
   const fetchAccounts = async () => {
     try {
-      const data= await transactionService.getAccounts();
-      console.log("Accounts data ----",data.results )
-      setAccounts(data.results );
+      const data = await transactionService.getAccounts();
+      setAccounts(data.results);
     } catch (err) {
       console.error('Error fetching accounts:', err);
     }
@@ -126,8 +122,6 @@ const TransactionsPage = () => {
   const fetchCategories = async () => {
     try {
       const data = await transactionService.getCategories();
-      console.log("Categories data ----",data.results )
-
       setCategories(data.results);
     } catch (err) {
       console.error('Error fetching categories:', err);
@@ -173,6 +167,8 @@ const TransactionsPage = () => {
   };
 
   const handleEditTransaction = (transaction) => {
+    // console.log("Accounts in form", accounts)
+    console.log("User account in form", transaction)
     setSelectedTransaction(transaction);
     setFormData({
       description: transaction.description || '',
@@ -205,7 +201,7 @@ const TransactionsPage = () => {
   const handleSubmitForm = async (e) => {
     e.preventDefault();
     setFormLoading(true);
-    
+
     try {
       if (showEditModal && selectedTransaction) {
         await transactionService.updateTransaction(selectedTransaction.id, formData);
@@ -214,7 +210,7 @@ const TransactionsPage = () => {
         await transactionService.createTransaction(formData);
         setShowAddModal(false);
       }
-      
+
       // Refresh data
       fetchTransactions(pagination.current_page);
       fetchStats();
@@ -253,8 +249,8 @@ const TransactionsPage = () => {
   };
 
   const handleSelectTransaction = (id) => {
-    setSelectedTransactions(prev => 
-      prev.includes(id) 
+    setSelectedTransactions(prev =>
+      prev.includes(id)
         ? prev.filter(tid => tid !== id)
         : [...prev, id]
     );
@@ -264,9 +260,9 @@ const TransactionsPage = () => {
     setBulkActionLoading(true);
     try {
       const result = await transactionService.bulkAction(selectedTransactions, action, data);
-      
+
       alert(result.message || 'Action completed successfully');
-      
+
       setSelectedTransactions([]);
       fetchTransactions(pagination.current_page);
       fetchStats();
@@ -290,7 +286,7 @@ const TransactionsPage = () => {
     try {
       const result = await transactionService.importTransactionsCSV(file);
       alert(`Import completed: ${result.stats.successful_rows} successful, ${result.stats.failed_rows} failed`);
-      
+
       fetchTransactions();
       fetchStats();
     } catch (err) {
@@ -304,13 +300,12 @@ const TransactionsPage = () => {
       pending: 'bg-yellow-100 text-yellow-800',
       unlabeled: 'bg-red-100 text-red-800'
     };
-    
+
     const labels = {
       labeled: 'Labeled',
       pending: 'Pending',
       unlabeled: 'Needs Label'
     };
-
     return (
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${styles[status]}`}>
         {labels[status]}
@@ -325,247 +320,10 @@ const TransactionsPage = () => {
       year: 'numeric'
     });
   };
-
-  // Modal Component
-  const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
-    if (!isOpen) return null;
-
-    const sizeClasses = {
-      sm: 'max-w-md',
-      md: 'max-w-lg',
-      lg: 'max-w-2xl',
-      xl: 'max-w-4xl'
-    };
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className={`bg-white rounded-lg shadow-xl ${sizeClasses[size]} w-full max-h-[90vh] overflow-auto`}>
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-            <button 
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-          <div className="p-6">
-            {children}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Transaction Form Component
-  const TransactionForm = ({ onSubmit, loading }) => (
-    <form onSubmit={onSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Description */}
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Description *
-          </label>
-          <input
-            type="text"
-            required
-            value={formData.description}
-            onChange={(e) => setFormData({...formData, description: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Enter transaction description"
-          />
-        </div>
-
-        {/* Amount */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Amount *
-          </label>
-          <div className="relative">
-            <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="number"
-              step="0.01"
-              required
-              value={formData.amount}
-              onChange={(e) => setFormData({...formData, amount: e.target.value})}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="0.00"
-            />
-          </div>
-        </div>
-
-        {/* Transaction Type */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Type *
-          </label>
-          <select
-            value={formData.transaction_type}
-            onChange={(e) => setFormData({...formData, transaction_type: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="expense">Expense</option>
-            <option value="income">Income</option>
-          </select>
-        </div>
-
-        {/* Date */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Date *
-          </label>
-          <input
-            type="date"
-            required
-            value={formData.date}
-            onChange={(e) => setFormData({...formData, date: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-
-        {/* Account */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Account
-          </label>
-          <div className="relative">
-            <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <select
-              value={formData.account}
-              onChange={(e) => setFormData({...formData, account: e.target.value})}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">Select Account</option>
-              {accounts.map(account => (
-                <option key={account.id} value={account.id}>
-                  {account.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Category */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Category
-          </label>
-          <div className="relative">
-            <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <select
-              value={formData.category}
-              onChange={(e) => setFormData({...formData, category: e.target.value})}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">Select Category</option>
-              {categories.map(category => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* VAT Rate */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            VAT Rate (%)
-          </label>
-          <select
-            value={formData.vat_rate}
-            onChange={(e) => setFormData({...formData, vat_rate: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="0">0%</option>
-            <option value="9">9%</option>
-            <option value="21">21%</option>
-          </select>
-        </div>
-
-        {/* Status */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Status
-          </label>
-          <select
-            value={formData.status}
-            onChange={(e) => setFormData({...formData, status: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="unlabeled">Unlabeled</option>
-            <option value="pending">Pending</option>
-            <option value="labeled">Labeled</option>
-          </select>
-        </div>
-
-        {/* Notes */}
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Notes
-          </label>
-          <textarea
-            value={formData.notes}
-            onChange={(e) => setFormData({...formData, notes: e.target.value})}
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Add any additional notes..."
-          />
-        </div>
-      </div>
-
-      {/* Form Actions */}
-      <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-        <button
-          type="button"
-          onClick={() => {
-            setShowAddModal(false);
-            setShowEditModal(false);
-            resetForm();
-          }}
-          className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
-        >
-          {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-          <Save className="h-4 w-4" />
-          <span>{showEditModal ? 'Update' : 'Create'} Transaction</span>
-        </button>
-      </div>
-    </form>
-  );
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Transactions</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button 
-            onClick={() => {
-              setError(null);
-              fetchTransactions();
-            }}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <div className="w-64 bg-white border-r border-gray-200">
-        <SideBar/>
+        <SideBar />
       </div>
 
       <div className="flex-1 flex flex-col">
@@ -594,7 +352,7 @@ const TransactionsPage = () => {
                   className="hidden"
                 />
               </label>
-              <button 
+              <button
                 onClick={handleAddTransaction}
                 className="flex items-center space-x-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
               >
@@ -658,7 +416,7 @@ const TransactionsPage = () => {
                 <Filter className="h-4 w-4" />
                 <span>More Filters</span>
               </button>
-              <button 
+              <button
                 onClick={handleExport}
                 className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
@@ -677,7 +435,7 @@ const TransactionsPage = () => {
                 <span className="text-sm font-medium text-blue-900">
                   {selectedTransactions.length} transaction{selectedTransactions.length > 1 ? 's' : ''} selected
                 </span>
-                <button 
+                <button
                   onClick={() => setSelectedTransactions([])}
                   className="text-sm text-blue-700 hover:text-blue-800 font-medium"
                 >
@@ -685,7 +443,7 @@ const TransactionsPage = () => {
                 </button>
               </div>
               <div className="flex items-center space-x-2">
-                <button 
+                <button
                   onClick={() => handleBulkAction('change_status', { status: 'labeled' })}
                   disabled={bulkActionLoading}
                   className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center space-x-1"
@@ -693,13 +451,13 @@ const TransactionsPage = () => {
                   {bulkActionLoading && <Loader2 className="h-3 w-3 animate-spin" />}
                   <span>Label as...</span>
                 </button>
-                <button 
+                <button
                   onClick={() => handleBulkAction('export')}
                   className="px-3 py-1 text-sm bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
                 >
                   Export selected
                 </button>
-                <button 
+                <button
                   onClick={() => handleBulkAction('delete')}
                   disabled={bulkActionLoading}
                   className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors disabled:opacity-50"
@@ -811,21 +569,21 @@ const TransactionsPage = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center space-x-2">
-                          <button 
+                          <button
                             onClick={() => handleViewTransaction(transaction)}
                             className="text-blue-600 hover:text-blue-800 transition-colors"
                             title="View Details"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleEditTransaction(transaction)}
                             className="text-gray-600 hover:text-gray-800 transition-colors"
                             title="Edit Transaction"
                           >
                             <Edit className="h-4 w-4" />
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleDeleteTransaction(transaction.id)}
                             className="text-red-600 hover:text-red-800 transition-colors"
                             title="Delete Transaction"
@@ -848,7 +606,7 @@ const TransactionsPage = () => {
                   <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No transactions found</h3>
                   <p className="text-gray-500 mb-6">Try adjusting your filters or import some transactions.</p>
-                  <button 
+                  <button
                     onClick={handleAddTransaction}
                     className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
                   >
@@ -876,14 +634,14 @@ const TransactionsPage = () => {
                 of <span className="font-medium">{pagination.count}</span> transactions
               </div>
               <div className="flex items-center space-x-2">
-                <button 
+                <button
                   onClick={() => fetchTransactions(pagination.current_page - 1)}
                   disabled={!pagination.previous}
                   className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
-                
+
                 {/* Page numbers */}
                 {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
                   const pageNum = i + 1;
@@ -891,17 +649,16 @@ const TransactionsPage = () => {
                     <button
                       key={pageNum}
                       onClick={() => fetchTransactions(pageNum)}
-                      className={`px-3 py-1 text-sm rounded ${
-                        pagination.current_page === pageNum
-                          ? 'bg-orange-600 text-white'
-                          : 'border border-gray-300 hover:bg-gray-50'
-                      }`}
+                      className={`px-3 py-1 text-sm rounded ${pagination.current_page === pageNum
+                        ? 'bg-orange-600 text-white'
+                        : 'border border-gray-300 hover:bg-gray-50'
+                        }`}
                     >
                       {pageNum}
                     </button>
                   );
                 })}
-                
+
                 {pagination.total_pages > 5 && (
                   <>
                     <span className="px-2 text-gray-500">...</span>
@@ -914,7 +671,7 @@ const TransactionsPage = () => {
                   </>
                 )}
 
-                <button 
+                <button
                   onClick={() => fetchTransactions(pagination.current_page + 1)}
                   disabled={!pagination.next}
                   className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -927,147 +684,61 @@ const TransactionsPage = () => {
         )}
       </div>
 
-      {/* Add Transaction Modal */}
       <Modal
         isOpen={showAddModal}
-        onClose={() => {
-          setShowAddModal(false);
-          resetForm();
-        }}
+        onClose={() => setShowAddModal(false)}
         title="Add New Transaction"
         size="lg"
       >
-        <TransactionForm onSubmit={handleSubmitForm} loading={formLoading} />
+        <TransactionForm
+          onSubmit={handleSubmitForm}
+          loading={formLoading}
+          formData={formData}
+          setFormData={setFormData}
+          accounts={accounts}
+          categories={categories}
+          onClose={() => setShowAddModal(false)}
+        />
       </Modal>
 
       {/* Edit Transaction Modal */}
       <Modal
         isOpen={showEditModal}
-        onClose={() => {
-          setShowEditModal(false);
-          resetForm();
-          setSelectedTransaction(null);
-        }}
+        onClose={() => setShowEditModal(false)}
         title="Edit Transaction"
         size="lg"
       >
-        <TransactionForm onSubmit={handleSubmitForm} loading={formLoading} />
+        <TransactionForm
+          onSubmit={handleSubmitForm}
+          loading={formLoading}
+          formData={formData}
+          setFormData={setFormData}
+          accounts={accounts}
+          categories={categories}
+          isEdit={true}
+          onClose={() => setShowEditModal(false)}
+        />
       </Modal>
 
       {/* View Transaction Modal */}
       <Modal
         isOpen={showViewModal}
-        onClose={() => {
-          setShowViewModal(false);
-          setSelectedTransaction(null);
-        }}
+        onClose={() => setShowViewModal(false)}
         title="Transaction Details"
         size="lg"
       >
-        {selectedTransaction && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Basic Info */}
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Description</label>
-                  <p className="text-lg font-semibold text-gray-900">{selectedTransaction.description}</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Amount</label>
-                  <p className={`text-2xl font-bold ${selectedTransaction.transaction_type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
-                    {selectedTransaction.formatted_amount || `€${selectedTransaction.amount}`}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Date</label>
-                  <p className="text-gray-900 flex items-center">
-                    <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-                    {formatDate(selectedTransaction.date)}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Status</label>
-                  <div>{getStatusBadge(selectedTransaction.status)}</div>
-                </div>
-              </div>
-
-              {/* Additional Details */}
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Account</label>
-                  <p className="text-gray-900 flex items-center">
-                    <Building className="h-4 w-4 mr-2 text-gray-400" />
-                    {selectedTransaction.account_name || 'Not specified'}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Category</label>
-                  <p className="text-gray-900 flex items-center">
-                    <Tag className="h-4 w-4 mr-2 text-gray-400" />
-                    {selectedTransaction.category_name || 'Uncategorized'}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">VAT Amount</label>
-                  <p className="text-gray-900">€{parseFloat(selectedTransaction.vat_amount || 0).toFixed(2)}</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Type</label>
-                  <p className="text-gray-900 capitalize">{selectedTransaction.transaction_type}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Receipt Info */}
-            {selectedTransaction.has_receipt && (
-              <div className="border-t border-gray-200 pt-6">
-                <div className="flex items-center space-x-2 text-blue-600">
-                  <Receipt className="h-5 w-5" />
-                  <span className="font-medium">Receipt Available</span>
-                </div>
-              </div>
-            )}
-
-            {/* Notes */}
-            {selectedTransaction.notes && (
-              <div className="border-t border-gray-200 pt-6">
-                <label className="block text-sm font-medium text-gray-500 mb-2">Notes</label>
-                <p className="text-gray-900 bg-gray-50 p-4 rounded-lg">{selectedTransaction.notes}</p>
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-              <button
-                onClick={() => {
-                  setShowViewModal(false);
-                  handleEditTransaction(selectedTransaction);
-                }}
-                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center space-x-2"
-              >
-                <Edit className="h-4 w-4" />
-                <span>Edit Transaction</span>
-              </button>
-              <button
-                onClick={() => {
-                  setShowViewModal(false);
-                  handleDeleteTransaction(selectedTransaction.id);
-                }}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                <span>Delete</span>
-              </button>
-            </div>
-          </div>
-        )}
+        <TransactionDetailView
+          transaction={selectedTransaction}
+          loading={formLoading}
+          onEdit={() => {
+            setShowViewModal(false);
+            handleEditTransaction(selectedTransaction);
+          }}
+          onDelete={() => {
+            setShowViewModal(false);
+            handleDeleteTransaction(selectedTransaction.id);
+          }}
+        />
       </Modal>
     </div>
   );
