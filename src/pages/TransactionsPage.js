@@ -82,7 +82,6 @@ const TransactionsPage = () => {
     setError(null);
     try {
       const filters = buildFilters();
-      console.log("Filter--", filters)
       const data = await transactionService.getTransactions(page, filters);
 
       setTransactions(data.results);
@@ -167,8 +166,6 @@ const TransactionsPage = () => {
   };
 
   const handleEditTransaction = (transaction) => {
-    // console.log("Accounts in form", accounts)
-    console.log("User account in form", transaction)
     setSelectedTransaction(transaction);
     setFormData({
       description: transaction.description || '',
@@ -284,7 +281,9 @@ const TransactionsPage = () => {
 
   const handleImportCSV = async (file) => {
     try {
+
       const result = await transactionService.importTransactionsCSV(file);
+      console.log('import file --- ',result);
       alert(`Import completed: ${result.stats.successful_rows} successful, ${result.stats.failed_rows} failed`);
 
       fetchTransactions();
@@ -452,7 +451,7 @@ const TransactionsPage = () => {
                   <span>Label as...</span>
                 </button>
                 <button
-                  onClick={() => handleBulkAction('export')}
+                  onClick={handleExport}
                   className="px-3 py-1 text-sm bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
                 >
                   Export selected
