@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
     User,
     Building,
@@ -7,7 +7,7 @@ import {
     CreditCard,
     Lock,
     Save,
-    LogOut ,
+    RefreshCw,
     Download,
     Trash2,
     Smartphone,
@@ -22,36 +22,16 @@ import { SideBar } from '../components/dashboard/SideBar';
 import { AuthContext } from '../context/AuthContext';
 
 const SettingPage = () => {
-    const { logout, user } = useContext(AuthContext)
+    const { user, setUser,fetchUSerData, updateUserProfile } = useContext(AuthContext)
     const [activeTab, setActiveTab] = useState('profile');
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [show2FAModal, setShow2FAModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [passwordVisible, setPasswordVisible] = useState(false);
-    console.log("User detail=",user)
-    // User profile state
-    const [userProfile, setUserProfile] = useState({
-        firstName: 'John',
-        lastName: 'Doeksen',
-        email: 'john@doeksendigital.com',
-        phone: '+31 6 1234 5678',
-        language: 'nl',
-        timezone: 'Europe/Amsterdam'
-    });
 
-    // Business profile state
-    const [businessProfile, setBusinessProfile] = useState({
-        companyName: 'Doeksen Digital',
-        vatNumber: 'NL123456789B01',
-        chamberOfCommerce: '12345678',
-        legalForm: 'BV',
-        address: 'Amsterdamseweg 123',
-        postalCode: '1234 AB',
-        city: 'Amsterdam',
-        country: 'Netherlands',
-        reportingPeriod: 'quarterly',
-        accountingYear: 'calendar'
-    });
+  
+
+  
 
     // Security settings state
     const [securitySettings, setSecuritySettings] = useState({
@@ -131,11 +111,11 @@ const SettingPage = () => {
         { id: 'data', label: 'Data & Privacy', icon: Database }
     ];
 
-    const handleLogout = () => {
-        logout();
+    const resetDefault= async()=>{
+        await fetchUSerData();       
     };
-    const handleSave = () => {
-        console.log("saved");
+    const handleSave = async() => {  
+        await updateUserProfile();       
     };
 
     const handlePasswordChange = () => {
@@ -174,8 +154,8 @@ const SettingPage = () => {
                                 <label className="block text-sm font-medium text-primary-700 mb-2">First Name</label>
                                 <input
                                     type="text"
-                                    value={userProfile.firstName}
-                                    onChange={(e) => setUserProfile({ ...userProfile, firstName: e.target.value })}
+                                    value={user.first_name}
+                                    onChange={(e) => setUser({ ...user, first_name: e.target.value })}
                                     className="w-full px-3 py-2 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                 />
                             </div>
@@ -183,8 +163,8 @@ const SettingPage = () => {
                                 <label className="block text-sm font-medium text-primary-700 mb-2">Last Name</label>
                                 <input
                                     type="text"
-                                    value={userProfile.lastName}
-                                    onChange={(e) => setUserProfile({ ...userProfile, lastName: e.target.value })}
+                                    value={user.last_name}
+                                    onChange={(e) => setUser({ ...user, last_name: e.target.value })}
                                     className="w-full px-3 py-2 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                 />
                             </div>
@@ -193,8 +173,8 @@ const SettingPage = () => {
                             <label className="block text-sm font-medium text-primary-700 mb-2">Email Address</label>
                             <input
                                 type="email"
-                                value={userProfile.email}
-                                onChange={(e) => setUserProfile({ ...userProfile, email: e.target.value })}
+                                value={user.email}
+                                onChange={(e) => setUser({ ...user, email: e.target.value })}
                                 className="w-full px-3 py-2 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                             />
                         </div>
@@ -202,8 +182,8 @@ const SettingPage = () => {
                             <label className="block text-sm font-medium text-primary-700 mb-2">Phone Number</label>
                             <input
                                 type="tel"
-                                value={userProfile.phone}
-                                onChange={(e) => setUserProfile({ ...userProfile, phone: e.target.value })}
+                                value={user.phone_number}
+                                onChange={(e) => setUser({ ...user, phone_number: e.target.value })}
                                 className="w-full px-3 py-2 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                             />
                         </div>
@@ -211,8 +191,10 @@ const SettingPage = () => {
                             <div>
                                 <label className="block text-sm font-medium text-primary-700 mb-2">Language</label>
                                 <select
-                                    value={userProfile.language}
-                                    onChange={(e) => setUserProfile({ ...userProfile, language: e.target.value })}
+                                    value={user.language}
+                                    onChange={(e) =>
+                                        setUser({ ...user, language: e.target.value })
+                                    }
                                     className="w-full px-3 py-2 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                 >
                                     <option value="nl">Dutch</option>
@@ -220,18 +202,18 @@ const SettingPage = () => {
                                     <option value="de">German</option>
                                 </select>
                             </div>
-                            <div>
+                            {/* <div>
                                 <label className="block text-sm font-medium text-primary-700 mb-2">Timezone</label>
                                 <select
-                                    value={userProfile.timezone}
-                                    onChange={(e) => setUserProfile({ ...userProfile, timezone: e.target.value })}
+                                    value={}
+                                    onChange={}
                                     className="w-full px-3 py-2 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                 >
                                     <option value="Europe/Amsterdam">Amsterdam</option>
                                     <option value="Europe/Brussels">Brussels</option>
                                     <option value="Europe/Berlin">Berlin</option>
                                 </select>
-                            </div>
+                            </div> */}
                         </div>
                     </div>
                 );
@@ -243,8 +225,16 @@ const SettingPage = () => {
                             <label className="block text-sm font-medium text-primary-700 mb-2">Company Name</label>
                             <input
                                 type="text"
-                                value={businessProfile.companyName}
-                                onChange={(e) => setBusinessProfile({ ...businessProfile, companyName: e.target.value })}
+                                value={user.business_profile.company_name}
+                                onChange={(e) =>
+                                    setUser({
+                                        ...user,
+                                        business_profile: {
+                                            ...user.business_profile,
+                                            company_name: e.target.value,
+                                        },
+                                    })
+                                }
                                 className="w-full px-3 py-2 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                             />
                         </div>
@@ -253,17 +243,33 @@ const SettingPage = () => {
                                 <label className="block text-sm font-medium text-primary-700 mb-2">VAT Number</label>
                                 <input
                                     type="text"
-                                    value={businessProfile.vatNumber}
-                                    onChange={(e) => setBusinessProfile({ ...businessProfile, vatNumber: e.target.value })}
+                                    value={user.business_profile.vat_number}
+                                    onChange={(e) =>
+                                        setUser({
+                                            ...user,
+                                            business_profile: {
+                                                ...user.business_profile,
+                                                vat_number: e.target.value,
+                                            },
+                                        })
+                                    }
                                     className="w-full px-3 py-2 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-primary-700 mb-2">Chamber of Commerce</label>
+                                <label className="block text-sm font-medium text-primary-700 mb-2">KVK Number</label>
                                 <input
                                     type="text"
-                                    value={businessProfile.chamberOfCommerce}
-                                    onChange={(e) => setBusinessProfile({ ...businessProfile, chamberOfCommerce: e.target.value })}
+                                    value={user.business_profile.kvk_number}
+                                    onChange={(e) =>
+                                        setUser({
+                                            ...user,
+                                            business_profile: {
+                                                ...user.business_profile,
+                                                kvk_number: e.target.value,
+                                            },
+                                        })
+                                    }
                                     className="w-full px-3 py-2 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                 />
                             </div>
@@ -272,8 +278,16 @@ const SettingPage = () => {
                             <label className="block text-sm font-medium text-primary-700 mb-2">Business Address</label>
                             <input
                                 type="text"
-                                value={businessProfile.address}
-                                onChange={(e) => setBusinessProfile({ ...businessProfile, address: e.target.value })}
+                                 value={user.business_profile.address}
+                                    onChange={(e) =>
+                                        setUser({
+                                            ...user,
+                                            business_profile: {
+                                                ...user.business_profile,
+                                                address: e.target.value,
+                                            },
+                                        })
+                                    }
                                 className="w-full px-3 py-2 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                 placeholder="Street and number"
                             />
@@ -283,8 +297,16 @@ const SettingPage = () => {
                                 <label className="block text-sm font-medium text-primary-700 mb-2">Postal Code</label>
                                 <input
                                     type="text"
-                                    value={businessProfile.postalCode}
-                                    onChange={(e) => setBusinessProfile({ ...businessProfile, postalCode: e.target.value })}
+                                     value={user.business_profile.postal_code}
+                                    onChange={(e) =>
+                                        setUser({
+                                            ...user,
+                                            business_profile: {
+                                                ...user.business_profile,
+                                                postal_code: e.target.value,
+                                            },
+                                        })
+                                    }
                                     className="w-full px-3 py-2 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                 />
                             </div>
@@ -292,23 +314,39 @@ const SettingPage = () => {
                                 <label className="block text-sm font-medium text-primary-700 mb-2">City</label>
                                 <input
                                     type="text"
-                                    value={businessProfile.city}
-                                    onChange={(e) => setBusinessProfile({ ...businessProfile, city: e.target.value })}
+                                     value={user.business_profile.city}
+                                    onChange={(e) =>
+                                        setUser({
+                                            ...user,
+                                            business_profile: {
+                                                ...user.business_profile,
+                                                city: e.target.value,
+                                            },
+                                        })
+                                    }
                                     className="w-full px-3 py-2 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-primary-700 mb-2">Legal Form</label>
                                 <select
-                                    value={businessProfile.legalForm}
-                                    onChange={(e) => setBusinessProfile({ ...businessProfile, legalForm: e.target.value })}
+                                     value={user.business_profile.legal_form}
+                                    onChange={(e) =>
+                                        setUser({
+                                            ...user,
+                                            business_profile: {
+                                                ...user.business_profile,
+                                                legal_form: e.target.value,
+                                            },
+                                        })
+                                    }
                                     className="w-full px-3 py-2 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                 >
-                                    <option value="BV">BV (Private Limited)</option>
-                                    <option value="NV">NV (Public Limited)</option>
-                                    <option value="VOF">VOF (Partnership)</option>
-                                    <option value="ZZP">ZZP (Sole Proprietor)</option>
-                                    <option value="Stichting">Stichting (Foundation)</option>
+                                    <option value="bv">BV (Private Limited)</option>
+                                    <option value="nv">NV (Public Limited)</option>
+                                    <option value="vof">VOF (Partnership)</option>
+                                    <option value="zzp">ZZP (Sole Proprietor)</option>
+                                    <option value="foundation">Stichting (Foundation)</option>
                                 </select>
                             </div>
                         </div>
@@ -316,25 +354,40 @@ const SettingPage = () => {
                             <div>
                                 <label className="block text-sm font-medium text-primary-700 mb-2">VAT Reporting Period</label>
                                 <select
-                                    value={businessProfile.reportingPeriod}
-                                    onChange={(e) => setBusinessProfile({ ...businessProfile, reportingPeriod: e.target.value })}
+                                    value={user.business_profile.reporting_period}
+                                    onChange={(e) =>
+                                        setUser({
+                                            ...user,
+                                            business_profile: {
+                                                ...user.business_profile,
+                                                reporting_period: e.target.value,
+                                            },
+                                        })
+                                    }
                                     className="w-full px-3 py-2 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                 >
-                                    <option value="monthly">Monthly</option>
-                                    <option value="quarterly">Quarterly</option>
-                                    <option value="yearly">Yearly</option>
+                                    <option value="month">Monthly</option>
+                                    <option value="quarter">Quarterly</option>
+                                    <option value="year">Yearly</option>
                                 </select>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-primary-700 mb-2">Accounting Year</label>
                                 <select
-                                    value={businessProfile.accountingYear}
-                                    onChange={(e) => setBusinessProfile({ ...businessProfile, accountingYear: e.target.value })}
+                                     value={user.business_profile.accounting_year}
+                                    onChange={(e) =>
+                                        setUser({
+                                            ...user,
+                                            business_profile: {
+                                                ...user.business_profile,
+                                                accounting_year: e.target.value,
+                                            },
+                                        })
+                                    }
                                     className="w-full px-3 py-2 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                 >
                                     <option value="calendar">Calendar Year (Jan-Dec)</option>
-                                    <option value="fiscal">Fiscal Year (Apr-Mar)</option>
-                                    <option value="custom">Custom Period</option>
+                                    <option value="fiscal">Fiscal Year (Apr-Mar)</option>                                   
                                 </select>
                             </div>
                         </div>
@@ -554,7 +607,7 @@ const SettingPage = () => {
 
                             <div className="flex items-center justify-between p-4 bg-primary-50 rounded-lg">
                                 <div className="flex items-center space-x-3">
-                                    <LogOut  className="h-5 w-5 text-primary-600" />
+                                    <RefreshCw className="h-5 w-5 text-primary-600" />
                                     <div>
                                         <span className="font-medium text-primary-900">Backup Data</span>
                                         <p className="text-sm text-primary-500">Create a backup of your current data</p>
@@ -589,7 +642,7 @@ const SettingPage = () => {
         }
     };
 
-    // Modal Components
+    // Modal kvk_numberponents
     const PasswordModal = () => (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-md">
@@ -743,11 +796,11 @@ const SettingPage = () => {
                             <p className="text-primary-600 mt-1">Doeksen Digital • Manage your account and preferences</p>
                         </div>
                         <div className="flex items-center space-x-4">
-                            <button
-                                onClick={handleLogout}
-                                className="flex items-center space-x-2 px-4 py-2 text-primary-700 hover:bg-primary-100 rounded-lg transition-colors">
-                                <LogOut  className="h-4 w-4" />
-                                <span>Logout</span>
+                            <button 
+                            onClick={resetDefault}
+                            className="flex items-center space-x-2 px-4 py-2 text-primary-700 hover:bg-primary-100 rounded-lg transition-colors">
+                                <RefreshCw className="h-4 w-4" />
+                                <span>Reset to defaults</span>
                             </button>
                             <button
                                 onClick={handleSave}
@@ -768,7 +821,7 @@ const SettingPage = () => {
                             <div>
                                 <h2 className="text-xl font-bold mb-2">Account Configuration</h2>
                                 <p className="text-primary-100 flex items-center">
-                                    Profile setup complete • Security enabled • Ready for VAT management 🎉
+                                    Profile setup kvk_numberplete • Security enabled • Ready for VAT management 🎉
                                 </p>
                             </div>
                             <div className="text-right">

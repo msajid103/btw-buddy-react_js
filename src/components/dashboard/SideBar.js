@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import {
   LayoutDashboard,
   CreditCard,
@@ -6,14 +6,17 @@ import {
   Calculator,
   Settings,
   User,
+  LogOut
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { AuthContext } from '../../context/AuthContext';
 
 export const SideBar = () => {
+  const { logout } = useContext(AuthContext)
   const location = useLocation(); // 👈 get current route
 
   const sidebarItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', to: '/dashboard' },
+    { icon: LayoutDashboard, label: 'Dashboard', to: '/' },
     { icon: CreditCard, label: 'Transactions', to: '/transactions' },
     { icon: FileText, label: 'Receipts', to: '/receipt' },
     { icon: Calculator, label: 'VAT Return', to: '/vat-return' },
@@ -48,11 +51,10 @@ export const SideBar = () => {
                 <li key={index}>
                   <Link
                     to={item.to}
-                    className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      isActive
-                        ? 'bg-primary-600 text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
+                    className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive
+                      ? 'bg-primary-600 text-white'
+                      : 'text-gray-700 hover:bg-gray-100'
+                      }`}
                   >
                     <item.icon className="h-5 w-5" />
                     <span>{item.label}</span>
@@ -97,6 +99,12 @@ export const SideBar = () => {
             <p className="text-xs text-gray-500 truncate">jan@doeksen.nl</p>
           </div>
         </div>
+        <button
+          onClick={() => logout()}
+          className="flex items-center space-x-2 px-2 py-4 text-primary-700 hover:bg-primary-100 rounded-lg transition-colors">
+          <LogOut className="h-4 w-4" />
+          <span>Logout</span>
+        </button>
       </div>
     </div>
   );
