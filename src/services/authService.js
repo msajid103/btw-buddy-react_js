@@ -1,7 +1,7 @@
 import api from './api';
 
 export const authService = {
-  step1validation: async(form1data)=>{
+  step1validation: async (form1data) => {
     const response = await api.post('/auth/register/step1/validate/', form1data)
     return response.data;
   },
@@ -22,10 +22,23 @@ export const authService = {
     localStorage.removeItem('refreshToken');
   },
 
-  verifyEmail: async (token) => {
-    const response = await api.post('/auth/verify-email', { token });
+  sendVerificationEmail: async (email) => {
+    const response = await api.post('/auth/send-verification-email/', { email });
     return response.data;
   },
+
+  verifyEmail: async (token) => {
+    const response = await api.post('/auth/verify-email/', { token });
+    return response.data;
+  },
+  
+  verifyOTP: async (userId, otpCode) => {
+  const response = await api.post('/auth/verify-otp/', { 
+    user_id: userId, 
+    otp_code: otpCode 
+  });
+  return response.data;
+},
 
   forgotPassword: async (email) => {
     const response = await api.post('/auth/forgot-password', { email });

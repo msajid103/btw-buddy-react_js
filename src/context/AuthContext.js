@@ -49,18 +49,27 @@ export const AuthProvider = ({ children }) => {
 
 
     // 🔹 Login user
-    const login = async (email, password) => {
-        setLoading(true);
-        try {
-            const res = await api.post("/auth/login/", { email, password });
+const login = async (email, password) => {
+    setLoading(true);
+    try {
+        const res = await api.post("/auth/login/", { email, password });
+        
+        // Only set tokens and user if 2FA is not required
+        if (!res.data.requires_2fa) {
             localStorage.setItem("accessToken", res.data.tokens.access);
             localStorage.setItem("refreshToken", res.data.tokens.refresh);
             const decoded = jwtDecode(res.data.tokens.access);
             setUser({ email: decoded.email, ...decoded });
-        } catch (error) {
-            console.log("Error while login:", error)
         }
-    };
+        
+        return res; // Return full response
+    } catch (error) {
+        console.log("Error while login:", error);
+        throw error; // Re-throw to handle in LoginPage
+    } finally {
+        setLoading(false);
+    }
+};
 
     // 🔹 Register user
     const register = async (data) => {

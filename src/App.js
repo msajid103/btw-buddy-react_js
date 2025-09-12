@@ -2,7 +2,8 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
-
+import EmailVerificationPage from "./pages/EmailVerificationPage";
+import EmailVerificationHandler from "./pages/EmailVerificationHandler";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
@@ -24,6 +25,8 @@ function App() {
             <Route path="/vat-landing" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/email-verification" element={<EmailVerificationPage />} />
+            <Route path="/verify-email/:token" element={<EmailVerificationHandler />} />
 
             {/* Protected routes */}
             <Route

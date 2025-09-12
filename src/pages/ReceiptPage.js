@@ -233,7 +233,7 @@ const ReceiptPage = () => {
         {/* Main Content */}
         <main className="flex-1 p-6">
           {/* Receipt Progress Status */}
-          {/* <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-6 text-white mb-8">
+          <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-6 text-white mb-8">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold mb-2">Receipt Processing Status</h2>
@@ -257,7 +257,7 @@ const ReceiptPage = () => {
                 style={{ width: `${(receipts.filter(r => r.status === 'processed').length / receipts.length) * 100}%` }}
               ></div>
             </div>
-          </div> */}
+          </div>
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">

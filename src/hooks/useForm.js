@@ -16,12 +16,15 @@ const useForm = (initialState, validate) => {
   const handleBlur = useCallback((e) => {
     const { name } = e.target;
     setTouched(prev => ({ ...prev, [name]: true }));
-    
+
     if (validate) {
       const newErrors = validate(values);
       setErrors(newErrors);
     }
   }, [values, validate]);
+  const setFieldTouched = useCallback((name, isTouched = true) => {
+    setTouched(prev => ({ ...prev, [name]: isTouched }));
+  }, []);
 
   const setFieldValue = useCallback((name, value) => {
     setValues(prev => ({ ...prev, [name]: value }));
@@ -48,6 +51,7 @@ const useForm = (initialState, validate) => {
     handleChange,
     handleBlur,
     setFieldValue,
+    setFieldTouched,
     setFieldError,
     setAllErrors,
     resetForm,

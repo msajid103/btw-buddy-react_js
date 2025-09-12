@@ -44,37 +44,38 @@ const RegisterPage = () => {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreeMarketing, setAgreeMarketing] = useState(false);
 
-const handleNextStep = async () => {
-  if (currentStep === 1) {
-    const errors = registerStep1Validator(step1Form.values);
+  const handleNextStep = async () => {
+    if (currentStep === 1) {
+      const errors = registerStep1Validator(step1Form.values);
 
-    if (Object.keys(errors).length === 0) {
-      try {
-        const response = await callApi(authService.step1validation, step1Form.values);
+      if (Object.keys(errors).length === 0) {
+        try {
+          const response = await callApi(authService.step1validation, step1Form.values);
 
-        console.log("Validation success:", response);
-        setCurrentStep(2);
+          console.log("Validation success:", response);
+          setCurrentStep(2);
 
-      } catch (err) {
-        // If backend says email already exists
-        if (err.response?.status === 400 && err.response.data?.email) {
-          step1Form.setFieldError("email", err.response.data.email[0]);
-        } else {
-          console.error("Unexpected error:", err);
+        } catch (err) {
+          // If backend says email already exists
+          if (err.response?.status === 400 && err.response.data?.email) {          
+            step1Form.setFieldError("email", err.response.data.email[0]);
+              step1Form.setFieldTouched("email", true);
+          } else {
+            console.error("Unexpected error:", err);
+          }
         }
+      } else {
+        step1Form.setAllErrors(errors);
       }
-    } else {
-      step1Form.setAllErrors(errors);
+    } else if (currentStep === 2) {
+      const errors = registerStep2Validator(step2Form.values);
+      if (Object.keys(errors).length === 0) {
+        setCurrentStep(3);
+      } else {
+        step2Form.setAllErrors(errors);
+      }
     }
-  } else if (currentStep === 2) {
-    const errors = registerStep2Validator(step2Form.values);
-    if (Object.keys(errors).length === 0) {
-      setCurrentStep(3);
-    } else {
-      step2Form.setAllErrors(errors);
-    }
-  }
-};
+  };
 
   const handlePrevStep = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
@@ -82,7 +83,7 @@ const handleNextStep = async () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!agreeTerms) {
       alert("Please agree to the terms and conditions");
       return;
@@ -91,16 +92,15 @@ const handleNextStep = async () => {
     try {
       const userData = {
         ...step1Form.values,
-        ...step2Form.values        
+        ...step2Form.values
       };
-      
+
       delete userData.confirmPassword;
-      
+
       await callApi(authService.register, userData);
-      navigate("/login")
-      // navigate("/verify-email", { 
-      //   state: { email: step1Form.values.email } 
-      // });
+      navigate("/email-verification", {
+        state: { email: step1Form.values.email }
+      });
     } catch (err) {
       // Error is handled by useApi hook
       console.error("Registration failed:", err);
@@ -112,7 +112,7 @@ const handleNextStep = async () => {
       <div className="w-full max-w-lg">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+          <div className="w-16 h-16 bg-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <span className="text-white font-bold text-2xl">B</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-900">
