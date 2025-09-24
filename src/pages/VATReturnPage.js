@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Calculator, 
   FileText, 
@@ -14,107 +14,213 @@ import {
   Edit,
   Printer,
   X,
+  RefreshCw,
+  Loader
 } from 'lucide-react';
 import { SideBar } from '../components/common/SideBar';
+import VATReturnService from '../services/VATReturnService';
+import { transactionService } from '../services/transactionService';
 
 const VATReturnPage = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState('Q3 2025');
+  const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [availablePeriods, setAvailablePeriods] = useState([]);
+  const [currentVATReturn, setCurrentVATReturn] = useState(null);
+  const [previousReturns, setPreviousReturns] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
-  
-  // VAT calculation data
-  const vatData = {
-    'Q3 2025': {
-      sales: {
-        standardRate: { amount: 15420.50, vat: 3238.31 },
-        reducedRate: { amount: 850.00, vat: 76.50 },
-        zeroRate: { amount: 1200.00, vat: 0 },
-        exempt: { amount: 0, vat: 0 }
-      },
-      purchases: {
-        standardRate: { amount: 8750.00, vat: 1837.50 },
-        reducedRate: { amount: 0, vat: 0 },
-        zeroRate: { amount: 0, vat: 0 },
-        capital: { amount: 2500.00, vat: 525.00 }
-      },
-      adjustments: 0,
-      previousCorrections: 0
-    },
-    'Q2 2025': {
-      sales: {
-        standardRate: { amount: 15420.50, vat: 3238.31 },
-        reducedRate: { amount: 850.00, vat: 76.50 },
-        zeroRate: { amount: 1200.00, vat: 0 },
-        exempt: { amount: 0, vat: 0 }
-      },
-      purchases: {
-        standardRate: { amount: 8750.00, vat: 1837.50 },
-        reducedRate: { amount: 0, vat: 0 },
-        zeroRate: { amount: 0, vat: 0 },
-        capital: { amount: 2500.00, vat: 525.00 }
-      },
-      adjustments: 0,
-      previousCorrections: 0
-    },
-    'Q1 2025': {
-      sales: {
-        standardRate: { amount: 15420.50, vat: 3238.31 },
-        reducedRate: { amount: 850.00, vat: 76.50 },
-        zeroRate: { amount: 1200.00, vat: 0 },
-        exempt: { amount: 0, vat: 0 }
-      },
-      purchases: {
-        standardRate: { amount: 8750.00, vat: 1837.50 },
-        reducedRate: { amount: 0, vat: 0 },
-        zeroRate: { amount: 0, vat: 0 },
-        capital: { amount: 2500.00, vat: 525.00 }
-      },
-      adjustments: 0,
-      previousCorrections: 0
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    initializePage();
+  }, []);
+
+  useEffect(() => {
+    if (selectedPeriod) {
+      loadVATReturnForPeriod();
+    }
+  }, [selectedPeriod]);
+
+  const initializePage = async () => {
+    try {
+      setLoading(true);
+      
+      // Load available periods
+      const periods = await VATReturnService.getAvailablePeriods();
+      setAvailablePeriods(periods);
+      
+      // Set current period as default
+      const currentPeriod = periods.find(p => p.is_current);
+      if (currentPeriod) {
+        setSelectedPeriod(`${currentPeriod.period} ${currentPeriod.year}`);
+      } else if (periods.length > 0) {
+        setSelectedPeriod(`${periods[0].period} ${periods[0].year}`);
+      }
+      
+      // Load previous returns
+      await loadPreviousReturns();
+      
+    } catch (err) {
+      console.error('Error initializing page:', err);
+      setError('Failed to load VAT return data');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const currentData = vatData[selectedPeriod];
-  const totalSalesVAT = Object.values(currentData.sales).reduce((sum, item) => sum + item.vat, 0);
-  const totalPurchasesVAT = Object.values(currentData.purchases).reduce((sum, item) => sum + item.vat, 0);
-  const netVAT = totalSalesVAT - totalPurchasesVAT + currentData.adjustments + currentData.previousCorrections;
-
-  const [previousReturns] = useState([
-    {
-      id: 'VAT-2025-Q2',
-      period: 'Q2 2025',
-      dueDate: '2025-07-31',
-      submittedDate: '2025-07-28',
-      status: 'submitted',
-      amount: 892.45,
-      vatOwed: 892.45,
-      vatReclaim: 0
-    },
-    {
-      id: 'VAT-2025-Q1',
-      period: 'Q1 2025',
-      dueDate: '2025-04-30',
-      submittedDate: '2025-04-25',
-      status: 'paid',
-      amount: 1245.80,
-      vatOwed: 1245.80,
-      vatReclaim: 0
-    },
-    {
-      id: 'VAT-2024-Q4',
-      period: 'Q4 2024',
-      dueDate: '2025-01-31',
-      submittedDate: '2025-01-29',
-      status: 'paid',
-      amount: -156.30,
-      vatOwed: 890.20,
-      vatReclaim: 1046.50
+  const loadVATReturnForPeriod = async () => {
+    try {
+      if (!selectedPeriod) return;
+      
+      const { period, year } = VATReturnService.parsePeriodString(selectedPeriod);
+      
+      // Get or create VAT return for the selected period
+      const vatReturn = await VATReturnService.getOrCreateVATReturn(period, year);
+      setCurrentVATReturn(vatReturn);
+      setError(null);
+      
+    } catch (err) {
+      console.error('Error loading VAT return:', err);
+      setError('Failed to load VAT return for selected period');
     }
-  ]);
+  };
+
+  const loadPreviousReturns = async () => {
+    try {
+      const response = await VATReturnService.getVATReturns();
+      // Take the last 3 returns, excluding current draft
+      const returns = response.results || response;
+      const filteredReturns = returns
+        .filter(r => r.status !== 'draft')
+        .slice(0, 3);
+      setPreviousReturns(filteredReturns);
+    } catch (err) {
+      console.error('Error loading previous returns:', err);
+    }
+  };
+
+  const handleRecalculate = async () => {
+    if (!currentVATReturn) return;
+    
+    try {
+      setLoading(true);
+      const updatedReturn = await VATReturnService.recalculateVATReturn(currentVATReturn.id);
+      setCurrentVATReturn(updatedReturn.data);
+    } catch (err) {
+      console.error('Error recalculating:', err);
+      setError('Failed to recalculate VAT return');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!currentVATReturn) return;
+    
+    try {
+      setSubmitLoading(true);
+      await VATReturnService.submitVATReturn(currentVATReturn.id);
+      
+      // Refresh the return data
+      await loadVATReturnForPeriod();
+      await loadPreviousReturns();
+      
+      setShowSubmitModal(false);
+    } catch (err) {
+      console.error('Error submitting VAT return:', err);
+      setError('Failed to submit VAT return');
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (!currentVATReturn) return;
+    
+    try {
+      await VATReturnService.exportVATReturnPDF(currentVATReturn.id);
+    } catch (err) {
+      console.error('Error exporting PDF:', err);
+      setError('Failed to export PDF');
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    const config = VATReturnService.getStatusBadgeConfig(status);
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+        {config.text}
+      </span>
+    );
+  };
+
+  const formatAmount = (amount) => {
+    return VATReturnService.formatVATAmount(amount || 0);
+  };
+
+  // Show loading state
+  if (loading && !currentVATReturn) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex">
+        <SideBar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex items-center space-x-2">
+            <Loader className="h-6 w-6 animate-spin" />
+            <span>Loading VAT return data...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error && !currentVATReturn) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex">
+        <SideBar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Data</h2>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button 
+              onClick={initializePage}
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentVATReturn) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex">
+        <SideBar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">No VAT Return Data</h2>
+            <p className="text-gray-600">Please select a period to view VAT return information.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate totals and values from the VAT return data
+  const totalSalesVAT = currentVATReturn.total_output_vat;
+  const totalPurchasesVAT = currentVATReturn.total_input_vat;
+  const netVAT = currentVATReturn.net_vat;
+  const daysUntilDue = currentVATReturn.due_date ? 
+    VATReturnService.calculateDaysUntilDue(currentVATReturn.due_date) : 0;
 
   const quickStats = [
     {
       title: 'VAT to Pay',
-      amount: `€${netVAT.toFixed(2)}`,
+      amount: formatAmount(netVAT),
       change: netVAT >= 0 ? 'Amount owed' : 'Reclaim due',
       icon: Euro,
       trend: netVAT >= 0 ? 'up' : 'down',
@@ -124,7 +230,7 @@ const VATReturnPage = () => {
     },
     {
       title: 'Sales VAT',
-      amount: `€${totalSalesVAT.toFixed(2)}`,
+      amount: formatAmount(totalSalesVAT),
       change: 'Output VAT collected',
       icon: TrendingUp,
       trend: 'up',
@@ -134,7 +240,7 @@ const VATReturnPage = () => {
     },
     {
       title: 'Purchase VAT',
-      amount: `€${totalPurchasesVAT.toFixed(2)}`,
+      amount: formatAmount(totalPurchasesVAT),
       change: 'Input VAT reclaimable',
       icon: TrendingDown,
       trend: 'down',
@@ -144,8 +250,8 @@ const VATReturnPage = () => {
     },
     {
       title: 'Return Status',
-      amount: 'Draft',
-      change: 'Ready to submit',
+      amount: currentVATReturn.status.charAt(0).toUpperCase() + currentVATReturn.status.slice(1),
+      change: currentVATReturn.status === 'draft' ? 'Ready to submit' : 'Completed',
       icon: CheckCircle,
       trend: 'ready',
       color: 'text-primary-600',
@@ -153,29 +259,6 @@ const VATReturnPage = () => {
       iconColor: 'text-primary-600'
     }
   ];
-
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      draft: { color: 'bg-yellow-100 text-yellow-800', text: 'Draft' },
-      submitted: { color: 'bg-blue-100 text-blue-800', text: 'Submitted' },
-      paid: { color: 'bg-green-100 text-green-800', text: 'Paid' },
-      overdue: { color: 'bg-red-100 text-red-800', text: 'Overdue' }
-    };
-    
-    const config = statusConfig[status] || statusConfig.draft;
-    return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
-        {config.text}
-      </span>
-    );
-  };
-
-  const handleSubmit = () => {
-    // Here you would typically submit to the API
-    console.log('Submitting VAT return for', selectedPeriod);
-    setShowSubmitModal(false);
-    // Show success message or redirect
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -190,16 +273,28 @@ const VATReturnPage = () => {
               <h1 className="text-2xl font-bold text-gray-900 flex items-center">
                 VAT Return 📊
               </h1>
-              <p className="text-gray-600 mt-1">Doeksen Digital • Prepare and submit VAT returns</p>
+              <p className="text-gray-600 mt-1">Prepare and submit VAT returns</p>
             </div>
             <div className="flex items-center space-x-4">
-              <button className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+              <button 
+                onClick={handleRecalculate}
+                disabled={loading || currentVATReturn.status !== 'draft'}
+                className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                <span>Recalculate</span>
+              </button>
+              {/* <button 
+                onClick={handleExportPDF}
+                className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
                 <Download className="h-4 w-4" />
                 <span>Export PDF</span>
-              </button>
+              </button> */}
               <button 
                 onClick={() => setShowSubmitModal(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
+                disabled={currentVATReturn.status !== 'draft'}
+                className="flex items-center space-x-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Send className="h-4 w-4" />
                 <span>Submit Return</span>
@@ -210,25 +305,55 @@ const VATReturnPage = () => {
 
         {/* Main Content */}
         <main className="flex-1 p-6">
+          {/* Error Alert */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <div className="flex">
+                <AlertTriangle className="h-5 w-5 text-red-600 mr-3 mt-0.5" />
+                <div>
+                  <h4 className="text-red-800 font-medium">Error</h4>
+                  <p className="text-red-700 text-sm mt-1">{error}</p>
+                </div>
+                <button 
+                  onClick={() => setError(null)}
+                  className="ml-auto text-red-600 hover:text-red-800"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* VAT Return Status */}
           <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-6 text-white mb-8">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-bold mb-2">VAT Return {selectedPeriod}</h2>
+                <h2 className="text-xl font-bold mb-2">VAT Return {currentVATReturn.period_display}</h2>
                 <p className="text-primary-100 flex items-center">
                   {netVAT >= 0 
-                    ? `€${netVAT.toFixed(2)} VAT to pay by Oct 31, 2025`
-                    : `€${Math.abs(netVAT).toFixed(2)} VAT reclaim expected`
+                    ? `${formatAmount(netVAT)} VAT to pay by ${new Date(currentVATReturn.due_date).toLocaleDateString()}`
+                    : `${formatAmount(Math.abs(netVAT))} VAT reclaim expected`
                   }
                 </p>
               </div>
               <div className="text-right">
-                <div className="text-3xl font-bold mb-1">Ready</div>
-                <div className="text-primary-100 text-sm">to submit</div>
+                <div className="text-3xl font-bold mb-1">
+                  {currentVATReturn.status.charAt(0).toUpperCase() + currentVATReturn.status.slice(1)}
+                </div>
+                <div className="text-primary-100 text-sm">
+                  {daysUntilDue > 0 ? `${daysUntilDue} days remaining` : 
+                   daysUntilDue < 0 ? `${Math.abs(daysUntilDue)} days overdue` : 
+                   'Due today'}
+                </div>
               </div>
             </div>
             <div className="mt-4 bg-white/20 rounded-full h-2">
-              <div className="bg-white h-2 rounded-full w-full"></div>
+              <div 
+                className="bg-white h-2 rounded-full transition-all duration-300" 
+                style={{ 
+                  width: currentVATReturn.status === 'draft' ? '80%' : '100%' 
+                }}
+              ></div>
             </div>
           </div>
 
@@ -261,16 +386,20 @@ const VATReturnPage = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Calculator className="h-5 w-5 text-primary-600" />
-                      <h3 className="text-lg font-semibold text-gray-900">VAT Calculation - {selectedPeriod}</h3>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        VAT Calculation - {currentVATReturn.period_display}
+                      </h3>
                     </div>
                     <select
                       value={selectedPeriod}
                       onChange={(e) => setSelectedPeriod(e.target.value)}
                       className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     >
-                      <option value="Q3 2025">Q3 2025</option>
-                      <option value="Q2 2025">Q2 2025</option>
-                      <option value="Q1 2025">Q1 2025</option>
+                      {availablePeriods.map((period) => (
+                        <option key={`${period.period}-${period.year}`} value={`${period.period} ${period.year}`}>
+                          {period.display}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -288,8 +417,8 @@ const VATReturnPage = () => {
                         <p className="text-xs text-gray-500">Goods and services at standard rate</p>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-medium text-gray-900">€{currentData.sales.standardRate.amount.toFixed(2)}</div>
-                        <div className="text-xs text-green-600">+€{currentData.sales.standardRate.vat.toFixed(2)} VAT</div>
+                        <div className="text-sm font-medium text-gray-900">{formatAmount(currentVATReturn.sales_standard_rate)}</div>
+                        <div className="text-xs text-green-600">+{formatAmount(currentVATReturn.output_vat_standard)} VAT</div>
                       </div>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
@@ -298,8 +427,8 @@ const VATReturnPage = () => {
                         <p className="text-xs text-gray-500">Food, books, medicines</p>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-medium text-gray-900">€{currentData.sales.reducedRate.amount.toFixed(2)}</div>
-                        <div className="text-xs text-green-600">+€{currentData.sales.reducedRate.vat.toFixed(2)} VAT</div>
+                        <div className="text-sm font-medium text-gray-900">{formatAmount(currentVATReturn.sales_reduced_rate)}</div>
+                        <div className="text-xs text-green-600">+{formatAmount(currentVATReturn.output_vat_reduced)} VAT</div>
                       </div>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
@@ -308,15 +437,15 @@ const VATReturnPage = () => {
                         <p className="text-xs text-gray-500">Exports, certain supplies</p>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-medium text-gray-900">€{currentData.sales.zeroRate.amount.toFixed(2)}</div>
-                        <div className="text-xs text-gray-600">€{currentData.sales.zeroRate.vat.toFixed(2)} VAT</div>
+                        <div className="text-sm font-medium text-gray-900">{formatAmount(currentVATReturn.sales_zero_rate)}</div>
+                        <div className="text-xs text-gray-600">{formatAmount(currentVATReturn.output_vat_zero)} VAT</div>
                       </div>
                     </div>
                   </div>
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-gray-900">Total Output VAT</span>
-                      <span className="text-lg font-bold text-green-600">€{totalSalesVAT.toFixed(2)}</span>
+                      <span className="text-lg font-bold text-green-600">{formatAmount(totalSalesVAT)}</span>
                     </div>
                   </div>
                 </div>
@@ -334,8 +463,8 @@ const VATReturnPage = () => {
                         <p className="text-xs text-gray-500">Business purchases and expenses</p>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-medium text-gray-900">€{currentData.purchases.standardRate.amount.toFixed(2)}</div>
-                        <div className="text-xs text-blue-600">-€{currentData.purchases.standardRate.vat.toFixed(2)} VAT</div>
+                        <div className="text-sm font-medium text-gray-900">{formatAmount(currentVATReturn.purchases_standard_rate)}</div>
+                        <div className="text-xs text-blue-600">-{formatAmount(currentVATReturn.input_vat_standard)} VAT</div>
                       </div>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
@@ -344,15 +473,15 @@ const VATReturnPage = () => {
                         <p className="text-xs text-gray-500">Equipment, machinery, vehicles</p>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-medium text-gray-900">€{currentData.purchases.capital.amount.toFixed(2)}</div>
-                        <div className="text-xs text-blue-600">-€{currentData.purchases.capital.vat.toFixed(2)} VAT</div>
+                        <div className="text-sm font-medium text-gray-900">{formatAmount(currentVATReturn.purchases_capital)}</div>
+                        <div className="text-xs text-blue-600">-{formatAmount(currentVATReturn.input_vat_capital)} VAT</div>
                       </div>
                     </div>
                   </div>
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-gray-900">Total Input VAT</span>
-                      <span className="text-lg font-bold text-blue-600">€{totalPurchasesVAT.toFixed(2)}</span>
+                      <span className="text-lg font-bold text-blue-600">{formatAmount(totalPurchasesVAT)}</span>
                     </div>
                   </div>
                 </div>
@@ -363,16 +492,16 @@ const VATReturnPage = () => {
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">Output VAT (Sales)</span>
-                        <span className="text-sm font-medium">€{totalSalesVAT.toFixed(2)}</span>
+                        <span className="text-sm font-medium">{formatAmount(totalSalesVAT)}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">Input VAT (Purchases)</span>
-                        <span className="text-sm font-medium">-€{totalPurchasesVAT.toFixed(2)}</span>
+                        <span className="text-sm font-medium">-{formatAmount(totalPurchasesVAT)}</span>
                       </div>
-                      {currentData.adjustments !== 0 && (
+                      {currentVATReturn.adjustments !== 0 && (
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600">Adjustments</span>
-                          <span className="text-sm font-medium">€{currentData.adjustments.toFixed(2)}</span>
+                          <span className="text-sm font-medium">{formatAmount(currentVATReturn.adjustments)}</span>
                         </div>
                       )}
                       <div className="border-t border-gray-300 pt-3">
@@ -381,7 +510,7 @@ const VATReturnPage = () => {
                             {netVAT >= 0 ? 'VAT to Pay' : 'VAT Reclaim'}
                           </span>
                           <span className={`text-xl font-bold ${netVAT >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                            €{Math.abs(netVAT).toFixed(2)}
+                            {formatAmount(Math.abs(netVAT))}
                           </span>
                         </div>
                       </div>
@@ -404,7 +533,8 @@ const VATReturnPage = () => {
                 <div className="p-6 space-y-3">
                   <button 
                     onClick={() => setShowSubmitModal(true)}
-                    className="w-full flex items-center justify-between p-3 text-left bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors border border-orange-200"
+                    disabled={currentVATReturn.status !== 'draft'}
+                    className="w-full flex items-center justify-between p-3 text-left bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors border border-orange-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="flex items-center space-x-3">
                       <Send className="h-5 w-5 text-orange-600" />
@@ -412,7 +542,10 @@ const VATReturnPage = () => {
                     </div>
                     <span className="text-orange-600">→</span>
                   </button>
-                  <button className="w-full flex items-center justify-between p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                  <button 
+                    onClick={handleExportPDF}
+                    className="w-full flex items-center justify-between p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
                     <div className="flex items-center space-x-3">
                       <Download className="h-5 w-5 text-gray-600" />
                       <span className="font-medium text-gray-900">Download PDF</span>
@@ -426,10 +559,14 @@ const VATReturnPage = () => {
                     </div>
                     <span className="text-gray-400">→</span>
                   </button>
-                  <button className="w-full flex items-center justify-between p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                  <button 
+                    onClick={handleRecalculate}
+                    disabled={loading || currentVATReturn.status !== 'draft'}
+                    className="w-full flex items-center justify-between p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     <div className="flex items-center space-x-3">
-                      <Edit className="h-5 w-5 text-gray-600" />
-                      <span className="font-medium text-gray-900">Edit Details</span>
+                      <RefreshCw className={`h-5 w-5 text-gray-600 ${loading ? 'animate-spin' : ''}`} />
+                      <span className="font-medium text-gray-900">Recalculate</span>
                     </div>
                     <span className="text-gray-400">→</span>
                   </button>
@@ -445,27 +582,34 @@ const VATReturnPage = () => {
                   </div>
                 </div>
                 <div className="p-6">
-                  <div className="space-y-4">
-                    {previousReturns.slice(0, 3).map((returnItem) => (
-                      <div key={returnItem.id} className="border rounded-lg p-3 hover:bg-gray-50 transition-colors">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{returnItem.period}</p>
-                            <p className="text-xs text-gray-500">Due: {returnItem.dueDate}</p>
+                  {previousReturns.length > 0 ? (
+                    <div className="space-y-4">
+                      {previousReturns.map((returnItem) => (
+                        <div key={returnItem.id} className="border rounded-lg p-3 hover:bg-gray-50 transition-colors">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{returnItem.period_display}</p>
+                              <p className="text-xs text-gray-500">Due: {new Date(returnItem.due_date).toLocaleDateString()}</p>
+                            </div>
+                            {getStatusBadge(returnItem.status)}
                           </div>
-                          {getStatusBadge(returnItem.status)}
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">
+                              {returnItem.net_vat >= 0 ? 'Paid' : 'Reclaimed'}
+                            </span>
+                            <span className={`text-sm font-medium ${returnItem.net_vat >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                              {formatAmount(Math.abs(returnItem.net_vat))}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">
-                            {returnItem.amount >= 0 ? 'Paid' : 'Reclaimed'}
-                          </span>
-                          <span className={`text-sm font-medium ${returnItem.amount >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                            €{Math.abs(returnItem.amount).toFixed(2)}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center text-gray-500 py-4">
+                      <FileText className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                      <p className="text-sm">No previous returns found</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -480,21 +624,29 @@ const VATReturnPage = () => {
                 <div className="p-6">
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Period End</span>
-                      <span className="text-sm font-medium">Sep 30, 2025</span>
+                      <span className="text-sm text-gray-600">Period</span>
+                      <span className="text-sm font-medium">{currentVATReturn.period_display}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-600">Submission Due</span>
-                      <span className="text-sm font-medium text-orange-600">Oct 31, 2025</span>
+                      <span className={`text-sm font-medium ${daysUntilDue < 0 ? 'text-red-600' : daysUntilDue < 7 ? 'text-orange-600' : 'text-gray-900'}`}>
+                        {new Date(currentVATReturn.due_date).toLocaleDateString()}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-600">Payment Due</span>
-                      <span className="text-sm font-medium text-red-600">Oct 31, 2025</span>
+                      <span className={`text-sm font-medium ${daysUntilDue < 0 ? 'text-red-600' : daysUntilDue < 7 ? 'text-orange-600' : 'text-gray-900'}`}>
+                        {new Date(currentVATReturn.due_date).toLocaleDateString()}
+                      </span>
                     </div>
                     <div className="pt-2 border-t">
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">Days Remaining</span>
-                        <span className="text-sm font-bold text-orange-600">27 days</span>
+                        <span className={`text-sm font-bold ${daysUntilDue < 0 ? 'text-red-600' : daysUntilDue < 7 ? 'text-orange-600' : 'text-green-600'}`}>
+                          {daysUntilDue > 0 ? `${daysUntilDue} days` : 
+                           daysUntilDue < 0 ? `${Math.abs(daysUntilDue)} days overdue` : 
+                           'Due today'}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -513,7 +665,8 @@ const VATReturnPage = () => {
               <h3 className="text-lg font-medium text-gray-900">Submit VAT Return</h3>
               <button
                 onClick={() => setShowSubmitModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                disabled={submitLoading}
+                className="text-gray-400 hover:text-gray-600 disabled:cursor-not-allowed"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -526,7 +679,7 @@ const VATReturnPage = () => {
                   <div>
                     <h4 className="text-sm font-medium text-orange-800">Confirm Submission</h4>
                     <p className="text-sm text-orange-700 mt-1">
-                      You are about to submit your VAT return for {selectedPeriod}. This action cannot be undone.
+                      You are about to submit your VAT return for {currentVATReturn.period_display}. This action cannot be undone.
                     </p>
                   </div>
                 </div>
@@ -537,22 +690,22 @@ const VATReturnPage = () => {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Period:</span>
-                    <span className="font-medium">{selectedPeriod}</span>
+                    <span className="font-medium">{currentVATReturn.period_display}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Output VAT:</span>
-                    <span className="font-medium">€{totalSalesVAT.toFixed(2)}</span>
+                    <span className="font-medium">{formatAmount(totalSalesVAT)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Input VAT:</span>
-                    <span className="font-medium">€{totalPurchasesVAT.toFixed(2)}</span>
+                    <span className="font-medium">{formatAmount(totalPurchasesVAT)}</span>
                   </div>
                   <div className="flex justify-between border-t pt-2 mt-2">
                     <span className="font-medium text-gray-900">
                       {netVAT >= 0 ? 'Amount to Pay:' : 'Reclaim Amount:'}
                     </span>
                     <span className={`font-bold ${netVAT >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                      €{Math.abs(netVAT).toFixed(2)}
+                      {formatAmount(Math.abs(netVAT))}
                     </span>
                   </div>
                 </div>
@@ -562,16 +715,27 @@ const VATReturnPage = () => {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowSubmitModal(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                disabled={submitLoading}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmit}
-                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center gap-2"
+                disabled={submitLoading}
+                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Send className="h-4 w-4" />
-                Submit Return
+                {submitLoading ? (
+                  <>
+                    <Loader className="h-4 w-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    Submit Return
+                  </>
+                )}
               </button>
             </div>
           </div>

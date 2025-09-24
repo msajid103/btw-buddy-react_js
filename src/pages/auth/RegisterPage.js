@@ -13,6 +13,7 @@ import PasswordStrength from "../../components/auth/PasswordStrength";
 import useForm from "../../hooks/useForm";
 import useApi from "../../hooks/useApi";
 import { authService } from "../../services/authService";
+import logo from "../../assets/logo.png";
 import {
   registerStep1Validator,
   registerStep2Validator
@@ -112,14 +113,16 @@ const RegisterPage = () => {
       <div className="w-full max-w-lg">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <span className="text-white font-bold text-2xl">B</span>
-          </div>
+          <img
+            src={logo}
+            alt="VAT Buddy Logo"
+            className="w-[6rem] h-[6rem] object-contain item-center mx-auto mb-4"
+          />
           <h1 className="text-3xl font-bold text-gray-900">
             Create Your Account
           </h1>
           <p className="text-gray-600 mt-2">
-            Start your free trial of <span className="font-semibold">VAT Buddy</span>
+            Start your free trial of <span className="font-semibold">BTW Buddy</span>
           </p>
         </div>
 

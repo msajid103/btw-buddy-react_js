@@ -59,7 +59,7 @@ const TransactionForm = ({
         </div>
 
         {/* Transaction Type */}
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Type *
           </label>
@@ -72,7 +72,7 @@ const TransactionForm = ({
             <option value="expense">Expense</option>
             <option value="income">Income</option>
           </select>
-        </div>
+        </div> */}
 
         {/* Date */}
         <div>

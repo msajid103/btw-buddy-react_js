@@ -10,9 +10,10 @@ import {
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
+import logo from '../../assets/logo.png';
 
 export const SideBar = () => {
-  const {user, logout } = useContext(AuthContext)
+  const { user, logout } = useContext(AuthContext)
   const location = useLocation(); // 👈 get current route
 
   const sidebarItems = [
@@ -28,12 +29,14 @@ export const SideBar = () => {
       {/* Logo */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">B</span>
-          </div>
+          <img
+            src={logo}
+            alt="VAT Buddy Logo"
+            className="w-12 h-12 object-contain"
+          />
           <div>
             <h1 className="font-bold text-gray-900">BTW-Buddy</h1>
-            <p className="text-xs text-gray-500">VAT return in 5 minutes</p>
+            {/* <p className="text-xs text-gray-500">VAT return in 5 minutes</p> */}
           </div>
         </div>
       </div>
@@ -65,27 +68,7 @@ export const SideBar = () => {
           </ul>
         </div>
 
-        {/* Quick Stats in Sidebar */}
-        <div className="mb-6">
-          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-            QUICK STATS
-          </h2>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">To label</span>
-              <span className="text-sm font-semibold text-orange-600">12</span>
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm text-gray-600">Quarter</span>
-                <span className="text-sm font-semibold text-gray-900">Q4 2024</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-orange-500 h-2 rounded-full" style={{ width: '75%' }}></div>
-              </div>
-            </div>
-          </div>
-        </div>
+       
       </nav>
 
       {/* User Profile */}

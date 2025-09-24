@@ -4,9 +4,12 @@ import { Eye, EyeOff, Lock, AlertCircle, Mail, Loader2, Shield } from 'lucide-re
 import { AuthContext } from '../../context/AuthContext';
 import TwoFactorAuthForm from '../../components/auth/TwoFactorAuthForm';
 import Modal from '../../components/common/Modal';
+import logo from '../../assets/logo.png';
 import { authService } from '../../services/authService'; // Add this import
+import { useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
+  const navigate = useNavigate();
   const { login, loading } = useContext(AuthContext)
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
@@ -66,7 +69,8 @@ const LoginPage = () => {
 
       // Close modal and redirect
       setShowModal(false);
-      window.location.href = "/";
+      // Use navigation instead of window.location.href
+       window.location.href = "/";
 
     } catch (error) {
       alert("Invalid OTP code. Please try again.");
@@ -83,16 +87,18 @@ const LoginPage = () => {
 
         {/* Logo & Heading */}
         <div className="text-center mb-10">
-          <div className="w-16 h-16 bg-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <span className="text-white font-bold text-2xl">B</span>
-          </div>
+          <img
+            src={logo}
+            alt="VAT Buddy Logo"
+            className="w-[6rem] h-[6rem] object-contain item-center mx-auto mb-4"
+          />
           <h1 className="text-3xl font-extrabold text-gray-900">Welcome Back</h1>
-          <p className="text-gray-600 mt-2">Log in to your <span className="font-semibold">VAT Buddy</span> account</p>
+          <p className="text-gray-600 mt-2">Log in to your <span className="font-semibold">BTW Buddy</span> account</p>
         </div>
 
         <form onSubmit={handleLogin} className="card bg-white/80 backdrop-blur-xl border border-gray-200 animate-fade-in">
           <div className="space-y-6">
-              {error && (
+            {error && (
               <div className="flex justify-center items-center text-red-600 text-lg mt-2">
                 <AlertCircle className="h-4 w-4 mr-2" />
                 {error}
@@ -144,7 +150,7 @@ const LoginPage = () => {
                 </button>
               </div>
             </div>
-             
+
 
             {/* Remember me + Forgot password */}
             <div className="flex items-center justify-between">
@@ -177,7 +183,7 @@ const LoginPage = () => {
                 "Log In"
               )}
             </button>
-         
+
           </div>
         </form>
 

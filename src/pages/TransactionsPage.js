@@ -99,15 +99,15 @@ const TransactionsPage = () => {
     }
   };
 
-  const fetchStats = async () => {
-    try {
-      const filters = buildFilters();
-      const data = await transactionService.getTransactionStats(filters);
-      setStats(data);
-    } catch (err) {
-      console.error('Error fetching stats:', err);
-    }
-  };
+  // const fetchStats = async () => {
+  //   try {
+  //     const filters = buildFilters();
+  //     const data = await transactionService.getTransactionStats(filters);
+  //     setStats(data);
+  //   } catch (err) {
+  //     console.error('Error fetching stats:', err);
+  //   }
+  // };
 
   const fetchAccounts = async () => {
     try {
@@ -130,7 +130,7 @@ const TransactionsPage = () => {
   // Initial data load
   useEffect(() => {
     fetchTransactions();
-    fetchStats();
+    // fetchStats();
     fetchAccounts();
     fetchCategories();
   }, []);
@@ -139,7 +139,7 @@ const TransactionsPage = () => {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       fetchTransactions(1);
-      fetchStats();
+      // fetchStats();
     }, 500);
 
     return () => clearTimeout(timeoutId);
@@ -210,7 +210,7 @@ const TransactionsPage = () => {
 
       // Refresh data
       fetchTransactions(pagination.current_page);
-      fetchStats();
+      // fetchStats();
       resetForm();
       setSelectedTransaction(null);
     } catch (err) {
@@ -229,7 +229,7 @@ const TransactionsPage = () => {
     try {
       await transactionService.deleteTransaction(transactionId);
       fetchTransactions(pagination.current_page);
-      fetchStats();
+      // fetchStats();
     } catch (err) {
       console.error('Error deleting transaction:', err);
       alert('Error deleting transaction: ' + err.message);
@@ -262,7 +262,7 @@ const TransactionsPage = () => {
 
       setSelectedTransactions([]);
       fetchTransactions(pagination.current_page);
-      fetchStats();
+      // fetchStats();
     } catch (err) {
       alert('Error performing bulk action: ' + err.message);
     } finally {
@@ -287,7 +287,7 @@ const TransactionsPage = () => {
       alert(`Import completed: ${result.stats.successful_rows} successful, ${result.stats.failed_rows} failed`);
 
       fetchTransactions();
-      fetchStats();
+      // fetchStats();
     } catch (err) {
       alert('Import failed: ' + err.message);
     }

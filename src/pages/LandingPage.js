@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import vat from "../assets/vat.png";
+import logo from "../assets/logo.png";
 
 const LandingPage = () => {
   const features = [
@@ -54,12 +55,15 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             {/* Logo */}
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">B</span>
-              </div>
-              <span className="text-xl font-bold text-gray-900">VAT Buddy</span>
+            <div className="flex items-center justify-center space-x-2">
+              <img
+                src={logo}
+                alt="VAT Buddy Logo"
+                className="w-12 h-12 object-contain"
+              />
+              <span className="text-xl font-bold text-gray-900">BTW Buddy</span>
             </div>
+
 
             {/* Nav links */}
             <div className="hidden md:flex items-center space-x-8">
@@ -218,10 +222,12 @@ const LandingPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center space-x-2 mb-6">
-                <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">B</span>
-                </div>
-                <span className="text-xl font-bold">VAT Buddy</span>
+                <img
+                  src={logo}
+                  alt="VAT Buddy Logo"
+                  className="w-12 h-12 object-contain"
+                />
+                <span className="text-xl font-bold">BTW Buddy</span>
               </div>
               <p className="text-gray-400 mb-4">
                 The smartest way to manage your VAT. Automated, secure, and
@@ -279,7 +285,7 @@ const LandingPage = () => {
           </div>
 
           <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 VAT Buddy. All rights reserved.</p>
+            <p>&copy; 2025 BTW Buddy. All rights reserved.</p>
           </div>
         </div>
       </footer>

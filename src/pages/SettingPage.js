@@ -793,7 +793,7 @@ const SettingPage = () => {
                             <h1 className="text-2xl font-bold text-primary-900 flex items-center">
                                 Settings ⚙️
                             </h1>
-                            <p className="text-primary-600 mt-1">Doeksen Digital • Manage your account and preferences</p>
+                            <p className="text-primary-600 mt-1">Manage your account and preferences</p>
                         </div>
                         <div className="flex items-center space-x-4">
                             <button 
