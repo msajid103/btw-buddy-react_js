@@ -70,12 +70,12 @@ class InvoiceService {
       });
       
       // Create download link
-      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const blob = new Blob([response.data], { type: 'application/html' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.style.display = 'none';
       a.href = url;
-      a.download = `invoice-${id}.pdf`;
+      a.download = `invoice-${id}.html`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -106,6 +106,17 @@ class InvoiceService {
       return response.data;
     } catch (error) {
       console.error('Error updating invoice status:', error);
+      throw error;
+    }
+  }
+
+  // Create new customer
+  async createCustomer(customerData) {
+    try {
+      const response = await api.post('/customers/', customerData);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating customer:', error);
       throw error;
     }
   }
