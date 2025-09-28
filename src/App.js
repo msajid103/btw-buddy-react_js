@@ -14,6 +14,7 @@ import VATReturnPage from "./pages/VATReturnPage";
 import SettingPage from "./pages/SettingPage";
 
 import "./index.css";
+import InvoicesPage from "./pages/InvoicesPage";
 
 function App() {
   return (
@@ -58,6 +59,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <VATReturnPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/invoice"
+              element={
+                <ProtectedRoute>
+                  <InvoicesPage />
                 </ProtectedRoute>
               }
             />

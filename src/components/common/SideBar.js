@@ -20,6 +20,7 @@ export const SideBar = () => {
     { icon: LayoutDashboard, label: 'Dashboard', to: '/' },
     { icon: CreditCard, label: 'Transactions', to: '/transactions' },
     { icon: FileText, label: 'Receipts', to: '/receipt' },
+    { icon: FileText, label: 'Invoices', to: '/invoice' },
     { icon: Calculator, label: 'VAT Return', to: '/vat-return' },
     { icon: Settings, label: 'Settings', to: '/setting' },
   ];
