@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Calculator, 
-  FileText, 
-  Download, 
-  Send, 
-  CheckCircle, 
+import {
+  Calculator,
+  FileText,
+  Download,
+  Send,
+  CheckCircle,
   AlertTriangle,
   Clock,
   Euro,
@@ -44,11 +44,11 @@ const VATReturnPage = () => {
   const initializePage = async () => {
     try {
       setLoading(true);
-      
+
       // Load available periods
       const periods = await VATReturnService.getAvailablePeriods();
       setAvailablePeriods(periods);
-      
+
       // Set current period as default
       const currentPeriod = periods.find(p => p.is_current);
       if (currentPeriod) {
@@ -56,10 +56,10 @@ const VATReturnPage = () => {
       } else if (periods.length > 0) {
         setSelectedPeriod(`${periods[0].period} ${periods[0].year}`);
       }
-      
+
       // Load previous returns
       await loadPreviousReturns();
-      
+
     } catch (err) {
       console.error('Error initializing page:', err);
       setError('Failed to load VAT return data');
@@ -71,14 +71,14 @@ const VATReturnPage = () => {
   const loadVATReturnForPeriod = async () => {
     try {
       if (!selectedPeriod) return;
-      
+
       const { period, year } = VATReturnService.parsePeriodString(selectedPeriod);
-      
+
       // Get or create VAT return for the selected period
       const vatReturn = await VATReturnService.getOrCreateVATReturn(period, year);
       setCurrentVATReturn(vatReturn);
       setError(null);
-      
+
     } catch (err) {
       console.error('Error loading VAT return:', err);
       setError('Failed to load VAT return for selected period');
@@ -101,7 +101,7 @@ const VATReturnPage = () => {
 
   const handleRecalculate = async () => {
     if (!currentVATReturn) return;
-    
+
     try {
       setLoading(true);
       const updatedReturn = await VATReturnService.recalculateVATReturn(currentVATReturn.id);
@@ -116,15 +116,15 @@ const VATReturnPage = () => {
 
   const handleSubmit = async () => {
     if (!currentVATReturn) return;
-    
+
     try {
       setSubmitLoading(true);
       await VATReturnService.submitVATReturn(currentVATReturn.id);
-      
+
       // Refresh the return data
       await loadVATReturnForPeriod();
       await loadPreviousReturns();
-      
+
       setShowSubmitModal(false);
     } catch (err) {
       console.error('Error submitting VAT return:', err);
@@ -136,7 +136,7 @@ const VATReturnPage = () => {
 
   const handleExportPDF = async () => {
     if (!currentVATReturn) return;
-    
+
     try {
       await VATReturnService.exportVATReturnPDF(currentVATReturn.id);
     } catch (err) {
@@ -183,7 +183,7 @@ const VATReturnPage = () => {
             <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Data</h2>
             <p className="text-gray-600 mb-4">{error}</p>
-            <button 
+            <button
               onClick={initializePage}
               className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
             >
@@ -210,13 +210,12 @@ const VATReturnPage = () => {
     );
   }
 
-  // Calculate totals and values from the VAT return data
-  const totalSalesVAT = currentVATReturn.total_output_vat;
-  const totalPurchasesVAT = currentVATReturn.total_input_vat;
-  const netVAT = currentVATReturn.net_vat;
-  const daysUntilDue = currentVATReturn.due_date ? 
-    VATReturnService.calculateDaysUntilDue(currentVATReturn.due_date) : 0;
-
+  // Calculate totals and values from the VAT return data with safe defaults
+  const totalSalesVAT = currentVATReturn?.total_output_vat || 0;
+  const totalPurchasesVAT = currentVATReturn?.total_input_vat || 0;
+  const netVAT = currentVATReturn?.net_vat_due || 0; // Note: changed from net_vat to net_vat_due to match your service
+  const daysUntilDue = currentVATReturn?.due_date ?
+    VATReturnService.calculateDaysUntilDue(currentVATReturn.due_date) : 30; // Default 30 days
   const quickStats = [
     {
       title: 'VAT to Pay',
@@ -250,7 +249,7 @@ const VATReturnPage = () => {
     },
     {
       title: 'Return Status',
-      amount: currentVATReturn.status.charAt(0).toUpperCase() + currentVATReturn.status.slice(1),
+      amount: currentVATReturn.status.charAt(0).toUpperCase() + currentVATReturn.status?.slice(1),
       change: currentVATReturn.status === 'draft' ? 'Ready to submit' : 'Completed',
       icon: CheckCircle,
       trend: 'ready',
@@ -263,7 +262,7 @@ const VATReturnPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <SideBar />
-      
+
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
@@ -276,7 +275,7 @@ const VATReturnPage = () => {
               <p className="text-gray-600 mt-1">Prepare and submit VAT returns</p>
             </div>
             <div className="flex items-center space-x-4">
-              <button 
+              <button
                 onClick={handleRecalculate}
                 disabled={loading || currentVATReturn.status !== 'draft'}
                 className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -291,7 +290,7 @@ const VATReturnPage = () => {
                 <Download className="h-4 w-4" />
                 <span>Export PDF</span>
               </button> */}
-              <button 
+              <button
                 onClick={() => setShowSubmitModal(true)}
                 disabled={currentVATReturn.status !== 'draft'}
                 className="flex items-center space-x-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -314,7 +313,7 @@ const VATReturnPage = () => {
                   <h4 className="text-red-800 font-medium">Error</h4>
                   <p className="text-red-700 text-sm mt-1">{error}</p>
                 </div>
-                <button 
+                <button
                   onClick={() => setError(null)}
                   className="ml-auto text-red-600 hover:text-red-800"
                 >
@@ -330,7 +329,7 @@ const VATReturnPage = () => {
               <div>
                 <h2 className="text-xl font-bold mb-2">VAT Return {currentVATReturn.period_display}</h2>
                 <p className="text-primary-100 flex items-center">
-                  {netVAT >= 0 
+                  {netVAT >= 0
                     ? `${formatAmount(netVAT)} VAT to pay by ${new Date(currentVATReturn.due_date).toLocaleDateString()}`
                     : `${formatAmount(Math.abs(netVAT))} VAT reclaim expected`
                   }
@@ -341,17 +340,17 @@ const VATReturnPage = () => {
                   {currentVATReturn.status.charAt(0).toUpperCase() + currentVATReturn.status.slice(1)}
                 </div>
                 <div className="text-primary-100 text-sm">
-                  {daysUntilDue > 0 ? `${daysUntilDue} days remaining` : 
-                   daysUntilDue < 0 ? `${Math.abs(daysUntilDue)} days overdue` : 
-                   'Due today'}
+                  {daysUntilDue > 0 ? `${daysUntilDue} days remaining` :
+                    daysUntilDue < 0 ? `${Math.abs(daysUntilDue)} days overdue` :
+                      'Due today'}
                 </div>
               </div>
             </div>
             <div className="mt-4 bg-white/20 rounded-full h-2">
-              <div 
-                className="bg-white h-2 rounded-full transition-all duration-300" 
-                style={{ 
-                  width: currentVATReturn.status === 'draft' ? '80%' : '100%' 
+              <div
+                className="bg-white h-2 rounded-full transition-all duration-300"
+                style={{
+                  width: currentVATReturn.status === 'draft' ? '80%' : '100%'
                 }}
               ></div>
             </div>
@@ -531,7 +530,7 @@ const VATReturnPage = () => {
                   </div>
                 </div>
                 <div className="p-6 space-y-3">
-                  <button 
+                  <button
                     onClick={() => setShowSubmitModal(true)}
                     disabled={currentVATReturn.status !== 'draft'}
                     className="w-full flex items-center justify-between p-3 text-left bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors border border-orange-200 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -542,7 +541,7 @@ const VATReturnPage = () => {
                     </div>
                     <span className="text-orange-600">→</span>
                   </button>
-                  <button 
+                  <button
                     onClick={handleExportPDF}
                     className="w-full flex items-center justify-between p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
                   >
@@ -559,7 +558,7 @@ const VATReturnPage = () => {
                     </div>
                     <span className="text-gray-400">→</span>
                   </button>
-                  <button 
+                  <button
                     onClick={handleRecalculate}
                     disabled={loading || currentVATReturn.status !== 'draft'}
                     className="w-full flex items-center justify-between p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -643,9 +642,9 @@ const VATReturnPage = () => {
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">Days Remaining</span>
                         <span className={`text-sm font-bold ${daysUntilDue < 0 ? 'text-red-600' : daysUntilDue < 7 ? 'text-orange-600' : 'text-green-600'}`}>
-                          {daysUntilDue > 0 ? `${daysUntilDue} days` : 
-                           daysUntilDue < 0 ? `${Math.abs(daysUntilDue)} days overdue` : 
-                           'Due today'}
+                          {daysUntilDue > 0 ? `${daysUntilDue} days` :
+                            daysUntilDue < 0 ? `${Math.abs(daysUntilDue)} days overdue` :
+                              'Due today'}
                         </span>
                       </div>
                     </div>
@@ -671,7 +670,7 @@ const VATReturnPage = () => {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            
+
             <div className="mb-6">
               <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
                 <div className="flex">
@@ -684,7 +683,7 @@ const VATReturnPage = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-gray-50 rounded-lg p-4">
                 <h4 className="font-medium text-gray-900 mb-3">Return Summary:</h4>
                 <div className="space-y-2 text-sm">
@@ -711,7 +710,7 @@ const VATReturnPage = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowSubmitModal(false)}

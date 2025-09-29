@@ -3,7 +3,10 @@ import {
   LayoutDashboard,
   CreditCard,
   FileText,
+  Scan, 
+ReceiptEuro,
   Calculator,
+  FileCheck,
   Settings,
   User,
   LogOut
@@ -19,8 +22,8 @@ export const SideBar = () => {
   const sidebarItems = [
     { icon: LayoutDashboard, label: 'Dashboard', to: '/' },
     { icon: CreditCard, label: 'Transactions', to: '/transactions' },
-    { icon: FileText, label: 'Receipts', to: '/receipt' },
-    { icon: FileText, label: 'Invoices', to: '/invoice' },
+    { icon: ReceiptEuro, label: 'Receipts', to: '/receipt' },
+    { icon: FileCheck, label: 'Invoices', to: '/invoice' },
     { icon: Calculator, label: 'VAT Return', to: '/vat-return' },
     { icon: Settings, label: 'Settings', to: '/setting' },
   ];
