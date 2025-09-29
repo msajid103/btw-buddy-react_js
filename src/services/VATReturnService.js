@@ -5,6 +5,7 @@ class VATReturnService {
   async getVATReturns() {
     try {
       const response = await api.get('/vat-returns/');
+      console.log('Fetched VAT returns:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error fetching VAT returns:', error);
@@ -85,6 +86,7 @@ class VATReturnService {
   async recalculateVATReturn(id) {
     try {
       const response = await api.post(`/vat-returns/${id}/recalculate/`);
+      console.log('Recalculated VAT return:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error recalculating VAT return:', error);

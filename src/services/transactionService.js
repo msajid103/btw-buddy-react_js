@@ -11,6 +11,7 @@ export const transactionService = {
       });
 
       const response = await api.get(`/transactions/?${queryParams}`);
+      console.log('Fetched transactions:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error fetching transactions:', error);

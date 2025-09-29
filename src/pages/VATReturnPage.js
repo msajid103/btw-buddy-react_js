@@ -213,7 +213,7 @@ const VATReturnPage = () => {
   // Calculate totals and values from the VAT return data with safe defaults
   const totalSalesVAT = currentVATReturn?.total_output_vat || 0;
   const totalPurchasesVAT = currentVATReturn?.total_input_vat || 0;
-  const netVAT = currentVATReturn?.net_vat_due || 0; // Note: changed from net_vat to net_vat_due to match your service
+  const netVAT = currentVATReturn?.net_vat || 0; // Note: changed from net_vat to net_vat_due to match your service
   const daysUntilDue = currentVATReturn?.due_date ?
     VATReturnService.calculateDaysUntilDue(currentVATReturn.due_date) : 30; // Default 30 days
   const quickStats = [
