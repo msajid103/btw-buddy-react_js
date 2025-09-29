@@ -38,10 +38,10 @@ const InvoicesPage = () => {
 
   // Statistics state
   const [stats, setStats] = useState({
-    totalInvoices: 0,
-    totalAmount: 0,
-    paidAmount: 0,
-    outstandingAmount: 0
+    total_invoices: 0,
+    total_amount: 0,
+    paid_amount: 0,
+    outstanding_amount: 0
   });
 
   // Create/Edit invoice state
@@ -130,29 +130,29 @@ const InvoicesPage = () => {
   const calculateStatsFromInvoices = () => {
     if (!Array.isArray(invoices) || invoices.length === 0) {
       setStats({
-        totalInvoices: 0,
-        totalAmount: 0,
-        paidAmount: 0,
-        outstandingAmount: 0
+        total_invoices: 0,
+        total_amount: 0,
+        paid_amount: 0,
+        outstanding_amount: 0
       });
       return;
     }
 
     const totals = invoices.reduce((acc, invoice) => {
-      acc.totalInvoices += 1;
-      acc.totalAmount += parseFloat(invoice.total || 0);
+      acc.total_invoices += 1;
+      acc.total_amount += parseFloat(invoice.total || 0);
       if (invoice.status === 'paid') {
-        acc.paidAmount += parseFloat(invoice.total || 0);
+        acc.paid_amount += parseFloat(invoice.total || 0);
       }
       return acc;
     }, {
-      totalInvoices: 0,
-      totalAmount: 0,
-      paidAmount: 0,
-      outstandingAmount: 0
+      total_invoices: 0,
+      total_amount: 0,
+      paid_amount: 0,
+      outstanding_amount: 0
     });
 
-    totals.outstandingAmount = totals.totalAmount - totals.paidAmount;
+    totals.outstanding_amount = totals.total_amount - totals.paid_amount;
     setStats(totals);
   };
 
@@ -438,7 +438,7 @@ const InvoicesPage = () => {
   const quickStats = [
     {
       title: 'Total Invoices',
-      amount: (stats.totalInvoices || 0).toString(),
+      amount: (stats.total_invoices || 0).toString(),
       change: 'All time',
       icon: FileText,
       color: 'text-blue-600',
@@ -447,7 +447,7 @@ const InvoicesPage = () => {
     },
     {
       title: 'Total Revenue',
-      amount: InvoiceService.formatCurrency(stats.totalAmount || 0),
+      amount: InvoiceService.formatCurrency(stats.total_amount || 0),
       change: 'Gross income',
       icon: Euro,
       color: 'text-green-600',
@@ -456,7 +456,7 @@ const InvoicesPage = () => {
     },
     {
       title: 'Paid Amount',
-      amount: InvoiceService.formatCurrency(stats.paidAmount || 0),
+      amount: InvoiceService.formatCurrency(stats.paid_amount || 0),
       change: 'Received payments',
       icon: CheckCircle,
       color: 'text-green-600',
@@ -465,7 +465,7 @@ const InvoicesPage = () => {
     },
     {
       title: 'Outstanding',
-      amount: InvoiceService.formatCurrency(stats.outstandingAmount || 0),
+      amount: InvoiceService.formatCurrency(stats.outstanding_amount || 0),
       change: 'Pending payments',
       icon: Clock,
       color: 'text-orange-600',
