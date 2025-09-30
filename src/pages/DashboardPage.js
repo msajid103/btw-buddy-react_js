@@ -211,7 +211,7 @@ const DashboardPage = () => {
                 Welcome back! 👋
               </h1>
               <p className="text-gray-600 mt-1">
-                {user.business_profile.company_name} • {dashboardData.vatReturn?.period || 'Q3 2025'}
+                {user.business_profile?.company_name} • {dashboardData.vatReturn?.period || 'Q3 2025'}
               </p>
             </div>
             <div className="flex items-center space-x-4">
