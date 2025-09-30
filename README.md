@@ -1,70 +1,100 @@
-# Getting Started with Create React App
+# BTW-Buddy
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+BTW-Buddy is a web application designed to automate VAT workflows with smart banking connections, intelligent document management, and instant reporting.  
+This MVP version lays the foundation for authentication, transaction management, document handling, and VAT reporting.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🚀 Features
 
-### `npm start`
+### 1. Authentication & User Management
+- Registration/login with e-mail + password or passkey  
+- Two-Factor Authentication (Google Authenticator / Email; SMS optional later)  
+- Role-based access: **Admin**, **Employee**, **Office User**
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 2. Business Profile
+- Basic details (Name, ID number, Legal form, Status flag)  
+- Configurable settings: period (Month / Quarter / Year), toggles for features  
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### 3. Bank Connection
+- Integration with PSD2/AIS aggregators (e.g., Tink, Yapily, Kosma)  
+- Fetch transactions (last 90 days)  
+- Store in database: date, amount, description, counter account  
+- Fallback: manual CSV import (CAMT/MT940)
 
-### `npm test`
+### 4. Transaction Management
+- Transaction table with filter/sort  
+- Labeling & categorization  
+- Bulk actions (edit multiple at once)  
+- Rule system: “If description contains X → assign label Y”
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 5. Document Management
+- Upload receipts/invoices (jpg, png, pdf)  
+- OCR integration (Google Vision / Tesseract / Azure Form Recognizer) *(post-MVP)*  
+- Extract fields: date, supplier, amount, VAT rate  
+- Link document to a transaction
 
-### `npm run build`
+### 6. Rules Engine
+- User-created rules  
+- Automatic suggestions for recurring transactions  
+- Optional AI-based suggestions  
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 7. Reporting & Export
+- Period-based reports (summary of transactions & documents)  
+- Export formats: CSV, Excel (XML optional)  
+- Archive view per period  
+- Audit log: track who/what/when changed
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 8. Notifications
+- Email reminders (e.g., deadlines)  
+- Optional push notifications  
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### 9. Data & Security
+- Database models: User, Business, BankAccount, Transaction, Receipt, Rule, Period, Report, AuditLog  
+- TLS/HTTPS for secure transport  
+- Encryption at rest (AES-256)  
+- Data hosted in EU  
+- Retention policy: 7 years  
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 🛠️ Tech Stack
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- **Frontend:** React or Vue (dashboard + forms)  
+- **Backend:** Node.js (Express) or Python (FastAPI)  
+- **Database:** PostgreSQL or MySQL  
+- **Hosting:** AWS / Azure / GCP  
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+---
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 📦 Deliverables (MVP)
 
-## Learn More
+- Working webapp (with above modules)  
+- Source code with documentation  
+- API documentation (Swagger/Postman)  
+- Deployment instructions (Docker / CI-CD optional)  
+- Staging URL for testing  
+- Handover checklist  
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 🎯 MVP Scope
 
-### Code Splitting
+- Authentication: email+password, roles (admin/employee/office), 2FA UI (no SMS yet)  
+- Business Profile: name, ID/legal form, reporting period  
+- Transactions: CSV import, filter/sort, labeling, bulk-edit  
+- Rules: basic “if description contains X → label Y”  
+- Documents: upload & link to transactions (OCR excluded in MVP)  
+- Reporting: summary per period + CSV/Excel export  
+- Audit log: basic actions  
+- Admin dashboard: manage users, basic settings, data overview  
+- Security: HTTPS, password hashing, role-based access  
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+---
 
-### Analyzing the Bundle Size
+## 🔗 References
+- [Rompslomp](https://rompslomp.nl/mogelijkheden)  
+- [Moneybird](https://www.moneybird.nl/)  
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+---
 
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
