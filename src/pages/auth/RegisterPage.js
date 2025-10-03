@@ -99,6 +99,7 @@ const RegisterPage = () => {
       delete userData.confirmPassword;
 
       await callApi(authService.register, userData);
+      callApi(authService.sendVerificationEmail, step1Form.values.email);
       navigate("/email-verification", {
         state: { email: step1Form.values.email }
       });

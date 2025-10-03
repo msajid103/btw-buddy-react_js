@@ -873,7 +873,7 @@ const InvoicesPage = () => {
                             customer: {...prev.customer, name: e.target.value}
                           }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                          placeholder="Company Name"
+                          placeholder="Customer Name"
                           required
                         />
                       </div>
@@ -1271,7 +1271,7 @@ const InvoicesPage = () => {
                     <input
                       type="text"
                       name="subject"
-                      defaultValue={`Invoice ${selectedInvoice.invoice_number} from Doeksen Digital`}
+                      defaultValue={`Invoice ${selectedInvoice.invoice_number}`}
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                     />
