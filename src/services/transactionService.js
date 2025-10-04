@@ -139,7 +139,25 @@ export const transactionService = {
       throw new Error('Import failed');
     }
   },
-
+  // Create new account
+  async createAccount(accountData) {
+    try {
+      const response = await api.post('/accounts/', accountData);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating account:', error);
+      throw error;
+    }
+  },
+  async createCategory(categoryData) {
+    try {
+      const response = await api.post('/categories/', categoryData);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating category:', error);
+      throw error;
+    }
+  },
   // Get accounts for dropdown/filter
   async getAccounts() {
     try {

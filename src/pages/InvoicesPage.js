@@ -8,19 +8,13 @@ import {
   Eye,
   Trash2,
   Search,
-  Filter,
   MoreVertical,
-  Calendar,
   Euro,
-  Users,
   CheckCircle,
   Clock,
   AlertTriangle,
   X,
   Mail,
-  Printer,
-  Copy,
-  ExternalLink
 } from 'lucide-react';
 import { SideBar } from '../components/common/SideBar';
 import InvoiceService from '../services/InvoiceService';

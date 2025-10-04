@@ -1,15 +1,17 @@
 import React from 'react';
 import { Save, DollarSign, Building, Tag, Loader2 } from 'lucide-react';
 
-const TransactionForm = ({ 
+const TransactionForm = ({
   onSubmit,
-  onClose, 
-  loading, 
-  formData, 
-  setFormData, 
-  accounts = [], 
+  onClose,
+  loading,
+  formData,
+  setFormData,
+  accounts = [],
   categories = [],
-  isEdit = false 
+  isEdit = false,
+  onAddNewAccount,  
+  onAddNewCategory  
 }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -57,23 +59,6 @@ const TransactionForm = ({
             />
           </div>
         </div>
-
-        {/* Transaction Type */}
-        {/* <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Type *
-          </label>
-          <select
-            name="transaction_type"
-            value={formData.transaction_type}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="expense">Expense</option>
-            <option value="income">Income</option>
-          </select>
-        </div> */}
-
         {/* Date */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -110,7 +95,16 @@ const TransactionForm = ({
               ))}
             </select>
           </div>
+           <button
+          type="button"
+          onClick={onAddNewAccount}
+          className="text-primary-600 hover:text-primary-700 text-sm"
+        >
+          + Add New Account
+        </button>
         </div>
+       
+
 
         {/* Category */}
         <div>
@@ -133,6 +127,13 @@ const TransactionForm = ({
               ))}
             </select>
           </div>
+           <button
+            type="button"
+            onClick={onAddNewCategory}
+            className="mt-2 text-orange-600 hover:text-orange-700 text-sm font-medium"
+          >
+            + Add New Category
+          </button>
         </div>
 
         {/* VAT Rate */}
@@ -204,6 +205,7 @@ const TransactionForm = ({
           <span>{isEdit ? 'Update' : 'Create'} Transaction</span>
         </button>
       </div>
+      
     </form>
   );
 };

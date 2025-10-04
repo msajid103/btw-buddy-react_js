@@ -11,18 +11,18 @@ import {
   MoreHorizontal,
   Eye,
   Edit,
-  Link2,
   Calendar,
   ArrowUpDown,
   Bell,
   Loader2,
-  AlertCircle,
   Trash2
 } from 'lucide-react';
 import { SideBar } from '../components/common/SideBar';
 import Modal from '../components/common/Modal';
 import TransactionForm from '../components/transactions/TransactionForm';
 import TransactionDetailView from '../components/transactions/TransactionDetailView';
+import AccountFormModal from '../components/transactions/AccountFormModal';
+import CategoryFormModal from '../components/transactions/CategoryFormModal';
 
 const TransactionsPage = () => {
   const [transactions, setTransactions] = useState([]);
@@ -51,6 +51,8 @@ const TransactionsPage = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showAccountModal, setShowAccountModal] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
 
@@ -278,7 +280,29 @@ const TransactionsPage = () => {
       alert('Export failed: ' + err.message);
     }
   };
+const handleCreateAccount = async (accountData) => {
+    try {
+      const newAccount = await transactionService.createAccount(accountData);
+      await fetchAccounts(); // Refresh accounts list
+      setFormData(prev => ({ ...prev, account: newAccount.id })); // Auto-select the new account
+      alert('Account created successfully!');
+    } catch (err) {
+      alert('Failed to create account: ' + err.message);
+      throw err;
+    }
+  };
 
+  const handleCreateCategory = async (categoryData) => {
+    try {
+      const newCategory = await transactionService.createCategory(categoryData);
+      await fetchCategories(); // Refresh categories list
+      setFormData(prev => ({ ...prev, category: newCategory.id })); // Auto-select the new category
+      alert('Category created successfully!');
+    } catch (err) {
+      alert('Failed to create category: ' + err.message);
+      throw err;
+    }
+  };
   const handleImportCSV = async (file) => {
     try {
 
@@ -683,7 +707,7 @@ const TransactionsPage = () => {
         )}
       </div>
 
-      <Modal
+     <Modal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         title="Add New Transaction"
@@ -697,6 +721,8 @@ const TransactionsPage = () => {
           accounts={accounts}
           categories={categories}
           onClose={() => setShowAddModal(false)}
+          onAddNewAccount={() => setShowAccountModal(true)}
+          onAddNewCategory={() => setShowCategoryModal(true)}
         />
       </Modal>
 
@@ -716,9 +742,10 @@ const TransactionsPage = () => {
           categories={categories}
           isEdit={true}
           onClose={() => setShowEditModal(false)}
+          onAddNewAccount={() => setShowAccountModal(true)}
+          onAddNewCategory={() => setShowCategoryModal(true)}
         />
       </Modal>
-
       {/* View Transaction Modal */}
       <Modal
         isOpen={showViewModal}
@@ -739,6 +766,19 @@ const TransactionsPage = () => {
           }}
         />
       </Modal>
+       {/* Account Creation Modal */}
+      <AccountFormModal
+        isOpen={showAccountModal}
+        onClose={() => setShowAccountModal(false)}
+        onSubmit={handleCreateAccount}
+      />
+
+      {/* Category Creation Modal */}
+      <CategoryFormModal
+        isOpen={showCategoryModal}
+        onClose={() => setShowCategoryModal(false)}
+        onSubmit={handleCreateCategory}
+      />
     </div>
   );
 };
