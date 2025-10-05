@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Calculator,
   FileText,
@@ -19,9 +19,10 @@ import {
 } from 'lucide-react';
 import { SideBar } from '../components/common/SideBar';
 import VATReturnService from '../services/VATReturnService';
-import { transactionService } from '../services/transactionService';
+import { AuthContext } from '../context/AuthContext';
 
 const VATReturnPage = () => {
+  const { user } = useContext(AuthContext)
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [availablePeriods, setAvailablePeriods] = useState([]);
   const [currentVATReturn, setCurrentVATReturn] = useState(null);
@@ -272,7 +273,7 @@ const VATReturnPage = () => {
               <h1 className="text-2xl font-bold text-gray-900 flex items-center">
                 VAT Return 📊
               </h1>
-              <p className="text-gray-600 mt-1">Prepare and submit VAT returns</p>
+              <p className="text-gray-600 mt-1">{user.business_profile?.company_name} • Prepare and submit VAT returns</p>
             </div>
             <div className="flex items-center space-x-4">
               <button

@@ -5,7 +5,7 @@ import { jwtDecode } from "jwt-decode";
 
 export const AuthContext = createContext();
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL = process.env.REACT_APP_API_URL;
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
@@ -32,44 +32,90 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
     }, []);
 
-    const fetchUSerData = async() => {
+    const fetchUSerData = async () => {
         const res = await api.get("auth/profile")
         setUser(res.data)
     }
 
-   const updateUserProfile = async() => {
+    const updateUserProfile = async () => {
         try {
             const res = await api.put("auth/profile/", user);
-            setUser(res.data); 
+            setUser(res.data);
             alert("Profile updated successfully!");
         } catch (err) {
             console.error("Update failed", err);
         }
     }
+    const update2FAChange = async () => {
+        try {
+            // Create updated user object with toggled 2FA status
+            const updatedUser = {
+                ...user,
+                is_2fa_enabled: !user.is_2fa_enabled
+            };
 
+            const res = await api.put("auth/profile/", updatedUser);
+            setUser(res.data);
+        } catch (err) {
+            console.error("2FA update failed", err);
+            alert("Failed to update 2FA settings");
+        }
+    };
+   const changePassword= async (passwordData) => {
+        // Validation
+        if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+            alert('Please fill in all fields');
+            return;
+        }
+
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            alert('New passwords do not match');
+            return;
+        }
+
+        if (passwordData.newPassword.length < 8) {
+            alert('New password must be at least 8 characters long');
+            return;
+        }
+
+        try {
+            const res = await api.post("auth/change-password/", {
+                current_password: passwordData.currentPassword,
+                new_password: passwordData.newPassword,
+                confirm_password: passwordData.confirmPassword
+            });
+            return res;
+        } catch (err) {
+            console.error("Password change failed", err);
+            const errorMessage = err.response?.data?.error || 
+                               err.response?.data?.message || 
+                               'Failed to change password';
+            alert(errorMessage);
+        }
+    };
 
     // 🔹 Login user
-const login = async (email, password) => {
-    setLoading(true);
-    try {
-        const res = await api.post("/auth/login/", { email, password });
-        
-        // Only set tokens and user if 2FA is not required
-        if (!res.data.requires_2fa) {
-            localStorage.setItem("accessToken", res.data.tokens.access);
-            localStorage.setItem("refreshToken", res.data.tokens.refresh);
-            const decoded = jwtDecode(res.data.tokens.access);
-            setUser({ email: decoded.email, ...decoded });
+    const login = async (email, password) => {
+        setLoading(true);
+        try {
+            const res = await api.post("/auth/login/", { email, password });
+
+            // Only set tokens and user if 2FA is not required
+            if (!res.data.requires_2fa) {
+                localStorage.setItem("accessToken", res.data.tokens.access);
+                localStorage.setItem("refreshToken", res.data.tokens.refresh);
+                const decoded = jwtDecode(res.data.tokens.access);
+                setUser({ email: decoded.email, ...decoded });
+            }
+
+            return res; // Return full response
+        } catch (error) {
+            console.log("Error while login:", error);
+            throw error; // Re-throw to handle in LoginPage
+        } finally {
+            setLoading(false);
         }
-        
-        return res; // Return full response
-    } catch (error) {
-        console.log("Error while login:", error);
-        throw error; // Re-throw to handle in LoginPage
-    } finally {
-        setLoading(false);
-    }
-};
+    };
 
     // 🔹 Register user
     const register = async (data) => {
@@ -106,7 +152,7 @@ const login = async (email, password) => {
 
     return (
         <AuthContext.Provider
-            value={{ user, loading, login, register, logout, refreshAccessToken, setUser,fetchUSerData, updateUserProfile,}}
+            value={{ user, loading, login, register, logout, refreshAccessToken, setUser, fetchUSerData, updateUserProfile, update2FAChange, changePassword }}
         >
             {children}
         </AuthContext.Provider>

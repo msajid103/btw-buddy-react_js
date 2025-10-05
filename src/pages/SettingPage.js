@@ -18,24 +18,20 @@ import {
     CheckCircle,
     X
 } from 'lucide-react';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { SideBar } from '../components/common/SideBar';
 import { AuthContext } from '../context/AuthContext';
+import ChangePasswordForm from '../components/settings/ChangePasswordForm';
 
 const SettingPage = () => {
-    const { user, setUser,fetchUSerData, updateUserProfile } = useContext(AuthContext)
+    const { user, setUser, fetchUSerData, updateUserProfile, update2FAChange, changePassword } = useContext(AuthContext)
     const [activeTab, setActiveTab] = useState('profile');
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [show2FAModal, setShow2FAModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [passwordVisible, setPasswordVisible] = useState(false);
-
-  
-
-  
-
-    // Security settings state
     const [securitySettings, setSecuritySettings] = useState({
-        twoFactorEnabled: true,
         emailNotifications: true,
         smsNotifications: false,
         loginAlerts: true,
@@ -111,31 +107,50 @@ const SettingPage = () => {
         { id: 'data', label: 'Data & Privacy', icon: Database }
     ];
 
-    const resetDefault= async()=>{
-        await fetchUSerData();       
+    const resetDefault = async () => {
+        await fetchUSerData();
     };
-    const handleSave = async() => {  
-        await updateUserProfile();       
+    const handleSave = async () => {
+        await updateUserProfile();
+    };
+    const handlePasswordChange = async () => {
+
+        try {
+            setShowPasswordModal(false);    
+            const res = await changePassword(passwordData);
+            if(!res) return;
+                toast.success('Password changed successfully!', {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
+            setPasswordData({
+                currentPassword: '',
+                newPassword: '',
+                confirmPassword: ''
+            });
+        } catch (err) {
+            console.error("Password change failed", err);
+            const errorMessage = err.response?.data?.error ||
+                err.response?.data?.message ||
+                'Failed to change password';
+            toast.error(errorMessage, {
+                position: "top-right",
+                autoClose: 3000,
+            });
+        }
     };
 
-    const handlePasswordChange = () => {
-        // Password change logic
-        console.log('Changing password...');
-        setShowPasswordModal(false);
-        setPasswordData({
-            currentPassword: '',
-            newPassword: '',
-            confirmPassword: ''
-        });
-    };
-
-    const handle2FAChange = () => {
-        // 2FA change logic
-        setSecuritySettings({
-            ...securitySettings,
-            twoFactorEnabled: !securitySettings.twoFactorEnabled
-        });
-        setShow2FAModal(false);
+    const handle2FAChange = async () => {
+        try {
+            await update2FAChange();
+            setShow2FAModal(false);
+        } catch (error) {
+            console.error("Error updating 2FA", error);
+        }
     };
 
     const handleDeleteAccount = () => {
@@ -202,18 +217,6 @@ const SettingPage = () => {
                                     <option value="de">German</option>
                                 </select>
                             </div>
-                            {/* <div>
-                                <label className="block text-sm font-medium text-primary-700 mb-2">Timezone</label>
-                                <select
-                                    value={}
-                                    onChange={}
-                                    className="w-full px-3 py-2 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                                >
-                                    <option value="Europe/Amsterdam">Amsterdam</option>
-                                    <option value="Europe/Brussels">Brussels</option>
-                                    <option value="Europe/Berlin">Berlin</option>
-                                </select>
-                            </div> */}
                         </div>
                     </div>
                 );
@@ -278,16 +281,16 @@ const SettingPage = () => {
                             <label className="block text-sm font-medium text-primary-700 mb-2">Business Address</label>
                             <input
                                 type="text"
-                                 value={user.business_profile.address}
-                                    onChange={(e) =>
-                                        setUser({
-                                            ...user,
-                                            business_profile: {
-                                                ...user.business_profile,
-                                                address: e.target.value,
-                                            },
-                                        })
-                                    }
+                                value={user.business_profile.address}
+                                onChange={(e) =>
+                                    setUser({
+                                        ...user,
+                                        business_profile: {
+                                            ...user.business_profile,
+                                            address: e.target.value,
+                                        },
+                                    })
+                                }
                                 className="w-full px-3 py-2 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                 placeholder="Street and number"
                             />
@@ -297,7 +300,7 @@ const SettingPage = () => {
                                 <label className="block text-sm font-medium text-primary-700 mb-2">Postal Code</label>
                                 <input
                                     type="text"
-                                     value={user.business_profile.postal_code}
+                                    value={user.business_profile.postal_code}
                                     onChange={(e) =>
                                         setUser({
                                             ...user,
@@ -314,7 +317,7 @@ const SettingPage = () => {
                                 <label className="block text-sm font-medium text-primary-700 mb-2">City</label>
                                 <input
                                     type="text"
-                                     value={user.business_profile.city}
+                                    value={user.business_profile.city}
                                     onChange={(e) =>
                                         setUser({
                                             ...user,
@@ -330,7 +333,7 @@ const SettingPage = () => {
                             <div>
                                 <label className="block text-sm font-medium text-primary-700 mb-2">Legal Form</label>
                                 <select
-                                     value={user.business_profile.legal_form}
+                                    value={user.business_profile.legal_form}
                                     onChange={(e) =>
                                         setUser({
                                             ...user,
@@ -374,7 +377,7 @@ const SettingPage = () => {
                             <div>
                                 <label className="block text-sm font-medium text-primary-700 mb-2">Accounting Year</label>
                                 <select
-                                     value={user.business_profile.accounting_year}
+                                    value={user.business_profile.accounting_year}
                                     onChange={(e) =>
                                         setUser({
                                             ...user,
@@ -387,7 +390,7 @@ const SettingPage = () => {
                                     className="w-full px-3 py-2 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                 >
                                     <option value="calendar">Calendar Year (Jan-Dec)</option>
-                                    <option value="fiscal">Fiscal Year (Apr-Mar)</option>                                   
+                                    <option value="fiscal">Fiscal Year (Apr-Mar)</option>
                                 </select>
                             </div>
                         </div>
@@ -419,17 +422,17 @@ const SettingPage = () => {
                                     </div>
                                 </div>
                                 <div className="flex items-center space-x-3">
-                                    {securitySettings.twoFactorEnabled && (
+                                    {user.is_2fa_enabled && (
                                         <CheckCircle className="h-5 w-5 text-green-600" />
                                     )}
                                     <button
                                         onClick={() => setShow2FAModal(true)}
-                                        className={`px-3 py-1 text-sm rounded-lg ${securitySettings.twoFactorEnabled
+                                        className={`px-3 py-1 text-sm rounded-lg ${user.is_2fa_enabled
                                             ? 'bg-green-100 text-green-800'
                                             : 'bg-primary-200 text-primary-600'
                                             }`}
                                     >
-                                        {securitySettings.twoFactorEnabled ? 'Enabled' : 'Disabled'}
+                                        {user.is_2fa_enabled ? 'Enabled' : 'Disabled'}
                                     </button>
                                 </div>
                             </div>
@@ -642,85 +645,20 @@ const SettingPage = () => {
         }
     };
 
-    // Modal kvk_numberponents
-    const PasswordModal = () => (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold">Change Password</h3>
-                    <button onClick={() => setShowPasswordModal(false)} className="text-primary-500 hover:text-primary-700">
-                        <X className="h-5 w-5" />
-                    </button>
-                </div>
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-primary-700 mb-1">Current Password</label>
-                        <input
-                            type={passwordVisible ? "text" : "password"}
-                            value={passwordData.currentPassword}
-                            onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                            className="w-full px-3 py-2 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-primary-700 mb-1">New Password</label>
-                        <input
-                            type={passwordVisible ? "text" : "password"}
-                            value={passwordData.newPassword}
-                            onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                            className="w-full px-3 py-2 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-primary-700 mb-1">Confirm New Password</label>
-                        <input
-                            type={passwordVisible ? "text" : "password"}
-                            value={passwordData.confirmPassword}
-                            onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                            className="w-full px-3 py-2 border border-primary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        />
-                    </div>
-                    <div className="flex items-center">
-                        <input
-                            type="checkbox"
-                            checked={passwordVisible}
-                            onChange={() => setPasswordVisible(!passwordVisible)}
-                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-primary-300 rounded"
-                        />
-                        <label className="ml-2 block text-sm text-primary-700">Show passwords</label>
-                    </div>
-                </div>
-                <div className="mt-6 flex justify-end space-x-3">
-                    <button
-                        onClick={() => setShowPasswordModal(false)}
-                        className="px-4 py-2 text-primary-700 hover:bg-primary-100 rounded-lg"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handlePasswordChange}
-                        className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-                    >
-                        Update Password
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
 
     const TwoFAModal = () => (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-md">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold">
-                        {securitySettings.twoFactorEnabled ? 'Disable' : 'Enable'} Two-Factor Authentication
+                        {user.is_2fa_enabled ? 'Disable' : 'Enable'} Two-Factor Authentication
                     </h3>
                     <button onClick={() => setShow2FAModal(false)} className="text-primary-500 hover:text-primary-700">
                         <X className="h-5 w-5" />
                     </button>
                 </div>
                 <p className="text-primary-600 mb-4">
-                    {securitySettings.twoFactorEnabled
+                    {user.is_2fa_enabled
                         ? 'Are you sure you want to disable two-factor authentication? This will make your account less secure.'
                         : 'Enabling two-factor authentication adds an extra layer of security to your account.'}
                 </p>
@@ -733,12 +671,12 @@ const SettingPage = () => {
                     </button>
                     <button
                         onClick={handle2FAChange}
-                        className={`px-4 py-2 rounded-lg ${securitySettings.twoFactorEnabled
+                        className={`px-4 py-2 rounded-lg ${user.is_2fa_enabled
                             ? 'bg-red-600 text-white hover:bg-red-700'
                             : 'bg-primary-600 text-white hover:bg-primary-700'
                             }`}
                     >
-                        {securitySettings.twoFactorEnabled ? 'Disable' : 'Enable'}
+                        {user.is_2fa_enabled ? 'Disable' : 'Enable'}
                     </button>
                 </div>
             </div>
@@ -782,6 +720,7 @@ const SettingPage = () => {
 
     return (
         <div className="min-h-screen bg-primary-50 flex">
+            <ToastContainer />
             <SideBar />
 
             {/* Main Content */}
@@ -793,12 +732,12 @@ const SettingPage = () => {
                             <h1 className="text-2xl font-bold text-primary-900 flex items-center">
                                 Settings ⚙️
                             </h1>
-                            <p className="text-primary-600 mt-1">Manage your account and preferences</p>
+                            <p className="text-primary-600 mt-1">{user.business_profile?.company_name} • Manage your account and preferences</p>
                         </div>
                         <div className="flex items-center space-x-4">
-                            <button 
-                            onClick={resetDefault}
-                            className="flex items-center space-x-2 px-4 py-2 text-primary-700 hover:bg-primary-100 rounded-lg transition-colors">
+                            <button
+                                onClick={resetDefault}
+                                className="flex items-center space-x-2 px-4 py-2 text-primary-700 hover:bg-primary-100 rounded-lg transition-colors">
                                 <RefreshCw className="h-4 w-4" />
                                 <span>Reset to defaults</span>
                             </button>
@@ -880,8 +819,15 @@ const SettingPage = () => {
                 </main>
             </div>
 
-            {/* Modals */}
-            {showPasswordModal && <PasswordModal />}
+
+            <ChangePasswordForm
+                isOpen={showPasswordModal}
+                onClose={() => setShowPasswordModal(false)}
+                passwordData={passwordData}
+                setPasswordData={setPasswordData}
+                handlePasswordChange={handlePasswordChange}
+            />
+            {/* {showPasswordModal && <RenderPasswordModal />} */}
             {show2FAModal && <TwoFAModal />}
             {showDeleteModal && <DeleteAccountModal />}
         </div>

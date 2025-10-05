@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Plus,
   FileText,
@@ -18,8 +18,10 @@ import {
 } from 'lucide-react';
 import { SideBar } from '../components/common/SideBar';
 import InvoiceService from '../services/InvoiceService';
+import { AuthContext } from '../context/AuthContext';
 
 const InvoicesPage = () => {
+  const { user } = useContext(AuthContext)
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -28,6 +30,7 @@ const InvoicesPage = () => {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
+  const [clickedMenu, setClickedMenu] = useState(null);
   const [error, setError] = useState(null);
 
   // Statistics state
@@ -71,11 +74,16 @@ const InvoicesPage = () => {
     initializePage();
   }, []);
 
-  // Close dropdown when clicking outside
+
+  // Close dropdown when clicking outside - UPDATED VERSION
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Close both selectedMenu and clickedMenu when clicking outside
       if (selectedMenu && !event.target.closest('.dropdown-menu')) {
         setSelectedMenu(null);
+      }
+      if (clickedMenu && !event.target.closest('.dropdown-menu')) {
+        setClickedMenu(null);
       }
     };
 
@@ -83,7 +91,7 @@ const InvoicesPage = () => {
     return () => {
       document.removeEventListener('click', handleClickOutside);
     };
-  }, [selectedMenu]);
+  }, [selectedMenu, clickedMenu]);
 
   const initializePage = async () => {
     try {
@@ -152,7 +160,7 @@ const InvoicesPage = () => {
 
   const handleCreateInvoice = async () => {
     setSelectedInvoice(null);
-    
+
     // Get next invoice number
     let nextNumber = '';
     try {
@@ -160,7 +168,7 @@ const InvoicesPage = () => {
     } catch (err) {
       nextNumber = `INV-${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-001`;
     }
-    
+
     setInvoiceForm({
       invoice_number: nextNumber,
       invoice_date: new Date().toISOString().split('T')[0],
@@ -191,7 +199,7 @@ const InvoicesPage = () => {
     try {
       // Load full invoice details including lines
       const fullInvoice = await InvoiceService.getInvoice(invoice.id);
-      
+
       setSelectedInvoice(fullInvoice);
       setInvoiceForm({
         invoice_number: fullInvoice.invoice_number,
@@ -233,7 +241,7 @@ const InvoicesPage = () => {
       };
 
       const newCustomer = await InvoiceService.createCustomer(customerData);
-      
+
       // Add to customers list and select it
       setCustomers(prev => [newCustomer, ...prev]);
       setInvoiceForm(prev => ({
@@ -242,7 +250,7 @@ const InvoicesPage = () => {
         customer: newCustomer
       }));
       setShowNewCustomerForm(false);
-      
+
     } catch (err) {
       console.error('Error creating customer:', err);
       setError('Failed to create customer');
@@ -277,7 +285,7 @@ const InvoicesPage = () => {
     try {
       // If creating new customer, do that first
       let customerId = invoiceForm.customer_id;
-      
+
       if (showNewCustomerForm && !customerId) {
         const customerData = {
           name: invoiceForm.customer.name,
@@ -328,10 +336,10 @@ const InvoicesPage = () => {
       setError(null);
     } catch (err) {
       console.error('Error saving invoice:', err);
-      const errorMessage = err.response?.data?.detail || 
-                          err.response?.data?.message ||
-                          Object.values(err.response?.data || {}).join(', ') ||
-                          'Failed to save invoice';
+      const errorMessage = err.response?.data?.detail ||
+        err.response?.data?.message ||
+        Object.values(err.response?.data || {}).join(', ') ||
+        'Failed to save invoice';
       setError(errorMessage);
     }
   };
@@ -405,7 +413,7 @@ const InvoicesPage = () => {
   const updateInvoiceLine = (index, field, value) => {
     setInvoiceForm(prev => ({
       ...prev,
-      lines: prev.lines.map((line, i) => 
+      lines: prev.lines.map((line, i) =>
         i === index ? { ...line, [field]: value } : line
       )
     }));
@@ -413,7 +421,7 @@ const InvoicesPage = () => {
 
   const filteredInvoices = invoices.filter(invoice => {
     const matchesSearch = invoice.invoice_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         invoice.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+      invoice.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || invoice.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
@@ -485,7 +493,7 @@ const InvoicesPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <SideBar />
-      
+
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
@@ -495,7 +503,7 @@ const InvoicesPage = () => {
               <h1 className="text-2xl font-bold text-gray-900 flex items-center">
                 Invoices 🧾
               </h1>
-              <p className="text-gray-600 mt-1">Doeksen Digital • Create and manage professional invoices</p>
+              <p className="text-gray-600 mt-1">{user.business_profile?.company_name} • Create and manage professional invoices</p>
             </div>
             <div className="flex items-center space-x-4">
               <button
@@ -520,7 +528,7 @@ const InvoicesPage = () => {
                   <h4 className="text-red-800 font-medium">Error</h4>
                   <p className="text-red-700 text-sm mt-1">{error}</p>
                 </div>
-                <button 
+                <button
                   onClick={() => setError(null)}
                   className="ml-auto text-red-600 hover:text-red-800"
                 >
@@ -556,7 +564,7 @@ const InvoicesPage = () => {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
-                                            <div className="relative dropdown-menu">
+                <div className="relative dropdown-menu">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <input
                     type="text"
@@ -588,7 +596,7 @@ const InvoicesPage = () => {
             <div className="p-6 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">Invoice Overview</h3>
             </div>
-            
+
             {filteredInvoices.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -686,37 +694,18 @@ const InvoicesPage = () => {
                             >
                               <Mail className="h-4 w-4" />
                             </button>
-                            <div className="relative group">
-                              <button className="text-gray-600 hover:text-gray-900 p-1 rounded">
-                                <MoreVertical className="h-4 w-4" />
-                              </button>
-                              <div className="absolute right-0 top-8 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                                <div className="py-1">
-                                  {invoice.status !== 'paid' && (
-                                    <button
-                                      onClick={() => handleStatusChange(invoice, 'paid')}
-                                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                                    >
-                                      Mark as Paid
-                                    </button>
-                                  )}
-                                  {invoice.status === 'draft' && (
-                                    <button
-                                      onClick={() => handleStatusChange(invoice, 'sent')}
-                                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                                    >
-                                      Mark as Sent
-                                    </button>
-                                  )}
-                                  <button
-                                    onClick={() => handleDeleteInvoice(invoice)}
-                                    className="block px-4 py-2 text-sm text-red-700 hover:bg-red-50 w-full text-left"
-                                  >
-                                    Delete
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                console.log('Button clicked for invoice:', invoice.id);
+                                console.log('Current clickedMenu:', clickedMenu);
+                                setClickedMenu(clickedMenu === invoice.id ? null : invoice.id);
+                              }}
+                              className="text-gray-600 hover:text-gray-900 p-1 rounded"
+                              data-invoice-id={invoice.id}
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -729,8 +718,8 @@ const InvoicesPage = () => {
                 <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No invoices found</h3>
                 <p className="text-gray-600 mb-6">
-                  {searchTerm || filterStatus !== 'all' 
-                    ? 'No invoices match your current filters.' 
+                  {searchTerm || filterStatus !== 'all'
+                    ? 'No invoices match your current filters.'
                     : 'Get started by creating your first invoice.'
                   }
                 </p>
@@ -766,7 +755,7 @@ const InvoicesPage = () => {
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6">
               {/* Invoice Header Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -777,7 +766,7 @@ const InvoicesPage = () => {
                   <input
                     type="text"
                     value={invoiceForm.invoice_number}
-                    onChange={(e) => setInvoiceForm(prev => ({...prev, invoice_number: e.target.value}))}
+                    onChange={(e) => setInvoiceForm(prev => ({ ...prev, invoice_number: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                     placeholder="INV-2025-001"
                   />
@@ -789,7 +778,7 @@ const InvoicesPage = () => {
                   <input
                     type="date"
                     value={invoiceForm.invoice_date}
-                    onChange={(e) => setInvoiceForm(prev => ({...prev, invoice_date: e.target.value}))}
+                    onChange={(e) => setInvoiceForm(prev => ({ ...prev, invoice_date: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
@@ -800,7 +789,7 @@ const InvoicesPage = () => {
                   <input
                     type="date"
                     value={invoiceForm.due_date}
-                    onChange={(e) => setInvoiceForm(prev => ({...prev, due_date: e.target.value}))}
+                    onChange={(e) => setInvoiceForm(prev => ({ ...prev, due_date: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
@@ -820,7 +809,7 @@ const InvoicesPage = () => {
                     </button>
                   )}
                 </div>
-                
+
                 {!showNewCustomerForm ? (
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -853,7 +842,7 @@ const InvoicesPage = () => {
                         <X className="h-4 w-4" />
                       </button>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -864,7 +853,7 @@ const InvoicesPage = () => {
                           value={invoiceForm.customer.name}
                           onChange={(e) => setInvoiceForm(prev => ({
                             ...prev,
-                            customer: {...prev.customer, name: e.target.value}
+                            customer: { ...prev.customer, name: e.target.value }
                           }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                           placeholder="Customer Name"
@@ -880,7 +869,7 @@ const InvoicesPage = () => {
                           value={invoiceForm.customer.vat_number}
                           onChange={(e) => setInvoiceForm(prev => ({
                             ...prev,
-                            customer: {...prev.customer, vat_number: e.target.value}
+                            customer: { ...prev.customer, vat_number: e.target.value }
                           }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                           placeholder="NL123456789B01"
@@ -894,7 +883,7 @@ const InvoicesPage = () => {
                           value={invoiceForm.customer.address}
                           onChange={(e) => setInvoiceForm(prev => ({
                             ...prev,
-                            customer: {...prev.customer, address: e.target.value}
+                            customer: { ...prev.customer, address: e.target.value }
                           }))}
                           rows={3}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -911,14 +900,14 @@ const InvoicesPage = () => {
                           value={invoiceForm.customer.chamber_of_commerce}
                           onChange={(e) => setInvoiceForm(prev => ({
                             ...prev,
-                            customer: {...prev.customer, chamber_of_commerce: e.target.value}
+                            customer: { ...prev.customer, chamber_of_commerce: e.target.value }
                           }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                           placeholder="12345678"
                         />
                       </div>
                     </div>
-                    
+
                     {showNewCustomerForm && (
                       <div className="mt-3">
                         <button
@@ -946,7 +935,7 @@ const InvoicesPage = () => {
                     <span>Add Line</span>
                   </button>
                 </div>
-                
+
                 <div className="space-y-4">
                   {invoiceForm.lines.map((line, index) => (
                     <div key={index} className="grid grid-cols-12 gap-3 p-4 bg-gray-50 rounded-lg">
@@ -1048,7 +1037,7 @@ const InvoicesPage = () => {
                   </label>
                   <textarea
                     value={invoiceForm.notes}
-                    onChange={(e) => setInvoiceForm(prev => ({...prev, notes: e.target.value}))}
+                    onChange={(e) => setInvoiceForm(prev => ({ ...prev, notes: e.target.value }))}
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                     placeholder="Additional notes or terms..."
@@ -1060,7 +1049,7 @@ const InvoicesPage = () => {
                   </label>
                   <textarea
                     value={invoiceForm.payment_instructions}
-                    onChange={(e) => setInvoiceForm(prev => ({...prev, payment_instructions: e.target.value}))}
+                    onChange={(e) => setInvoiceForm(prev => ({ ...prev, payment_instructions: e.target.value }))}
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                     placeholder="Payment terms and instructions..."
@@ -1107,7 +1096,7 @@ const InvoicesPage = () => {
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6">
               {/* Invoice Preview Content */}
               <div className="space-y-6">
@@ -1234,7 +1223,7 @@ const InvoicesPage = () => {
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6">
               <form onSubmit={(e) => {
                 e.preventDefault();
@@ -1286,12 +1275,12 @@ Payment is due by ${new Date(selectedInvoice.due_date).toLocaleDateString()}.
 Thank you for your business.
 
 Best regards,
-Doeksen Digital`}
+${user.business_profile?.company_name}`}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                     />
                   </div>
                 </div>
-                
+
                 <div className="flex justify-end space-x-3 mt-6">
                   <button
                     type="button"
@@ -1312,6 +1301,74 @@ Doeksen Digital`}
             </div>
           </div>
         </div>
+      )}
+
+      {/* Portal-based Dropdown Modal*/}
+      {clickedMenu && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setClickedMenu(null)}
+          />
+
+          {/* Dropdown Content */}
+          {(() => {
+            const invoice = invoices.find(inv => inv.id === clickedMenu);
+            if (!invoice) return null;
+
+            // Find the button element to position relative to it
+            const buttonElement = document.querySelector(`button[data-invoice-id="${invoice.id}"]`);
+            if (!buttonElement) return null;
+
+            const buttonRect = buttonElement.getBoundingClientRect();
+
+            return (
+              <div
+                className="fixed z-50 w-48 bg-white rounded-md shadow-lg border border-gray-200"
+                style={{
+                  left: `${buttonRect.left - 180}px`, // Position to the left of the button
+                  top: `${buttonRect.bottom + 5}px` // Position below the button
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="py-1">
+                  {invoice.status !== 'paid' && (
+                    <button
+                      onClick={(e) => {
+                        handleStatusChange(invoice, 'paid');
+                        setClickedMenu(null);
+                      }}
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                    >
+                      Mark as Paid
+                    </button>
+                  )}
+                  {invoice.status === 'draft' && (
+                    <button
+                      onClick={(e) => {
+                        handleStatusChange(invoice, 'sent');
+                        setClickedMenu(null);
+                      }}
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                    >
+                      Mark as Sent
+                    </button>
+                  )}
+                  <button
+                    onClick={(e) => {
+                      handleDeleteInvoice(invoice);
+                      setClickedMenu(null);
+                    }}
+                    className="block px-4 py-2 text-sm text-red-700 hover:bg-red-50 w-full text-left"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+        </>
       )}
     </div>
   );

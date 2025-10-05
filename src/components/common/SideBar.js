@@ -2,9 +2,7 @@ import React, { useContext } from 'react';
 import {
   LayoutDashboard,
   CreditCard,
-  FileText,
-  Scan, 
-ReceiptEuro,
+  ReceiptEuro,
   Calculator,
   FileCheck,
   Settings,

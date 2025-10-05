@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { transactionService } from '../services/transactionService';
 import {
   FileText,
@@ -23,8 +23,10 @@ import TransactionForm from '../components/transactions/TransactionForm';
 import TransactionDetailView from '../components/transactions/TransactionDetailView';
 import AccountFormModal from '../components/transactions/AccountFormModal';
 import CategoryFormModal from '../components/transactions/CategoryFormModal';
+import { AuthContext } from '../context/AuthContext';
 
 const TransactionsPage = () => {
+  const { user } = useContext(AuthContext)
   const [transactions, setTransactions] = useState([]);
   const [selectedTransactions, setSelectedTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -280,7 +282,7 @@ const TransactionsPage = () => {
       alert('Export failed: ' + err.message);
     }
   };
-const handleCreateAccount = async (accountData) => {
+  const handleCreateAccount = async (accountData) => {
     try {
       const newAccount = await transactionService.createAccount(accountData);
       await fetchAccounts(); // Refresh accounts list
@@ -307,7 +309,7 @@ const handleCreateAccount = async (accountData) => {
     try {
 
       const result = await transactionService.importTransactionsCSV(file);
-      console.log('import file --- ',result);
+      console.log('import file --- ', result);
       alert(`Import completed: ${result.stats.successful_rows} successful, ${result.stats.failed_rows} failed`);
 
       fetchTransactions();
@@ -356,7 +358,7 @@ const handleCreateAccount = async (accountData) => {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Transactions</h1>
               <p className="text-gray-600 mt-1">
-                Manage and categorize your business transactions
+                {user.business_profile?.company_name} • Manage and categorize your business transactions
                 {stats && (
                   <span className="ml-2 text-sm">
                     • {stats.total_transactions} total • {stats.unlabeled_count} unlabeled
@@ -707,7 +709,7 @@ const handleCreateAccount = async (accountData) => {
         )}
       </div>
 
-     <Modal
+      <Modal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         title="Add New Transaction"
@@ -766,7 +768,7 @@ const handleCreateAccount = async (accountData) => {
           }}
         />
       </Modal>
-       {/* Account Creation Modal */}
+      {/* Account Creation Modal */}
       <AccountFormModal
         isOpen={showAccountModal}
         onClose={() => setShowAccountModal(false)}
