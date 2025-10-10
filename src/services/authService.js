@@ -52,4 +52,53 @@ export const authService = {
     });
     return response.data;
   },
+  // Request password reset
+async requestPasswordReset(email) {
+  try {
+    const response = await api.post('/auth/password-reset/', { email });
+    return response.data;
+  } catch (error) {
+    console.error('Password reset request error:', error);
+    throw new Error(
+      error.response?.data?.email?.[0] || 
+      error.response?.data?.message || 
+      'Failed to send reset email'
+    );
+  }
+},
+
+// Validate reset token
+async validateResetToken(uid, token) {
+  try {
+    const response = await api.get(`/auth/password-reset-validate/${uid}/${token}/`);
+    return response.data;
+  } catch (error) {
+    console.error('Token validation error:', error);
+    throw new Error(
+      error.response?.data?.message || 
+      'Invalid or expired token'
+    );
+  }
+},
+
+// Confirm password reset
+async confirmPasswordReset(uid, token, newPassword, confirmPassword) {
+  try {
+    const response = await api.post('/auth/password-reset-confirm/', {
+      uid,
+      token,
+      new_password: newPassword,
+      confirm_password: confirmPassword,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Password reset confirmation error:', error);
+    throw new Error(
+      error.response?.data?.new_password?.[0] || 
+      error.response?.data?.non_field_errors?.[0] || 
+      error.response?.data?.message || 
+      'Failed to reset password'
+    );
+  }
+},
 };

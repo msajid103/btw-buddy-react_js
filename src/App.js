@@ -15,6 +15,8 @@ import SettingPage from "./pages/SettingPage";
 
 import "./index.css";
 import InvoicesPage from "./pages/InvoicesPage";
+import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 
 function App() {
   return (
@@ -28,6 +30,8 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/email-verification" element={<EmailVerificationPage />} />
             <Route path="/verify-email/:token" element={<EmailVerificationHandler />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password/:uid/:token" element={<ResetPasswordPage />} />
 
             {/* Protected routes */}
             <Route
