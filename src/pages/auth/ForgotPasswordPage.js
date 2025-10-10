@@ -30,8 +30,8 @@ const ForgotPasswordPage = () => {
             <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-purple-100 flex items-center justify-center p-4">
                 <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
                     <div className="text-center">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                            <CheckCircle className="h-8 w-8 text-green-600" />
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-100 rounded-full mb-4">
+                            <CheckCircle className="h-8 w-8 text-primary-600" />
                         </div>
                         <h2 className="text-2xl font-bold text-gray-900 mb-2">Check Your Email</h2>
                         <p className="text-gray-600 mb-6">
@@ -46,13 +46,13 @@ const ForgotPasswordPage = () => {
                                     setSuccess(false);
                                     setEmail('');
                                 }}
-                                className="w-full px-4 py-2 text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
+                                className="w-full px-4 py-2 text-primary-600 border border-primary-600 rounded-lg hover:bg-primary-50 transition-colors"
                             >
                                 Try Another Email
                             </button>
                             <Link
                                 to="/login"
-                                className="block w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-center"
+                                className="block w-full px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-center"
                             >
                                 Back to Login
                             </Link>
@@ -104,7 +104,7 @@ const ForgotPasswordPage = () => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
-                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                className="input-field pl-10"
                                 placeholder="Enter your email"
                             />
                         </div>
